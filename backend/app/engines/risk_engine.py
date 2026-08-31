@@ -1,201 +1,180 @@
 """
-Feature 1: AI Risk Engine (Phase 2 Additive & Explainable)
-Combines statistical outlier detection (Z-score / IQR from peer stats), rule-based SLA/March-rush thresholds,
-and an Isolation Forest model to produce an explainable, ADDITIVE Risk Score (0–100).
+Feature 1: AI Risk Engine Core (Phase 2)
+Computes explainable, additive composite Risk Score (0-100) per project.
 
-Strict Score Decomposition:
-Risk Score (0-100) = Cost Anomaly (+0 to 30)
-                     + Delay Anomaly (+0 to 25)
-                     + Payment Pattern (+0 to 20)
-                     + Spatial Signal (+0 to 15)
-                     + Evidence Issue (+0 to 10)
+Scoring Components (Additive, sum up to 100):
+1. Cost Anomaly Component (Weight: 25%) - Statistical Z-Score / IQR deviation from peer cohort budget
+2. Delay Anomaly Component (Weight: 25%) - Execution timeline vs peer cohort duration benchmark
+3. Payment Pattern Component (Weight: 25%) - Fiscal rush detection (e.g. March disbursement spikes)
+4. Spatial Signal Component (Weight: 15%) - Geographic risk density / high-risk neighbor proximity
+5. Evidence Issue Component (Weight: 10%) - Contradictory evidence (Never penalizes missing data)
 
-Vocabulary Enums: POTENTIAL_ANOMALY, REQUIRES_VERIFICATION, HIGH_RISK_COST_DEVIATION, NORMAL
+Isolation Forest Integration:
+Provides un-supervised outlier anomaly probability score as an auxiliary signal.
 """
 
 import numpy as np
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from sklearn.ensemble import IsolationForest
+
+
+RISK_ENGINE_VERSION = "v1.0.0"
+RULES_VERSION = "v1.2.0-sih2026"
 
 
 class AIRiskEngine:
     def __init__(self):
-        self.isolation_forest = IsolationForest(n_estimators=100, contamination=0.05, random_state=42)
+        self.iso_forest: Optional[IsolationForest] = None
         self.is_fitted = False
 
     def fit_isolation_forest(self, feature_matrix: np.ndarray):
-        """Fits lightweight Isolation Forest model on normalized feature matrix."""
-        if len(feature_matrix) >= 10:
-            self.isolation_forest.fit(feature_matrix)
+        """Fits unsupervised Isolation Forest model on historical project features."""
+        if len(feature_matrix) > 0:
+            self.iso_forest = IsolationForest(contamination=0.1, random_state=42)
+            self.iso_forest.fit(feature_matrix)
             self.is_fitted = True
 
-    def calculate_cost_component(self, amount: float, peer_mean: float, peer_std: float, peer_status: str) -> float:
-        """
-        Cost Anomaly (+0 to 30 points).
-        Uses Z-score deviation from Step 2 peer stats.
-        If peer data is insufficient, caps Z-score impact.
-        """
-        if peer_status == "NO_PEER_DATA" or peer_std <= 0:
+    def calculate_cost_anomaly_score(self, project: Dict[str, Any], peer_stats: Dict[str, Any]) -> float:
+        """Calculates budget deviation relative to peer cohort mean & std dev."""
+        disbursed = float(project.get("disbursed_amount_inr", 0) or 0)
+        mean_cost = float(peer_stats.get("cost_mean", 500000.0))
+        std_cost = float(peer_stats.get("cost_std", 200000.0))
+
+        if std_cost == 0:
             return 0.0
-        
-        z = abs((amount - peer_mean) / peer_std)
-        # Z-score of 3.0+ maps to maximum 30.0 points
-        points = (z / 3.0) * 30.0
-        return float(np.clip(points, 0.0, 30.0))
 
-    def calculate_delay_component(self, current_stage: str, completion_month: int = None, fiscal_year: str = "2024-2025") -> float:
-        """
-        Delay / Timeline Anomaly (+0 to 25 points).
-        Evaluates execution timelines against standard SLA expectations.
-        """
-        # Duration proxy from fiscal year (e.g. 2024-2025 -> ~2 years elapsed)
-        base_delay_ratio = 1.2
-        if current_stage != "COMPLETION_REPORTED":
-            base_delay_ratio = 2.5 # Outstanding pending work
-            
-        points = max(0.0, (base_delay_ratio - 1.0) / 2.0) * 25.0
-        return float(np.clip(points, 0.0, 25.0))
+        z_score = (disbursed - mean_cost) / std_cost
+        if z_score <= 1.0:
+            return 0.0
+        elif z_score <= 2.0:
+            return 40.0
+        elif z_score <= 3.0:
+            return 75.0
+        else:
+            return 100.0
 
-    def calculate_payment_component(self, expenditure_month: int = None, is_march_rush: bool = False) -> float:
-        """
-        Payment Pattern Anomaly (+0 to 20 points).
-        Checks for year-end fiscal expenditure spikes (March rush) or single-lump disbursements.
-        """
-        points = 0.0
-        if expenditure_month == 3 or is_march_rush:
-            points += 15.0 # March fiscal rush flag (+15)
-        elif expenditure_month in (2, 4):
-            points += 8.0  # Near year-end window
-            
-        return float(np.clip(points, 0.0, 20.0))
+    def calculate_delay_anomaly_score(self, project: Dict[str, Any], peer_stats: Dict[str, Any]) -> float:
+        """Calculates timeline delay relative to peer cohort duration benchmark."""
+        duration = float(project.get("duration_days", 0) or 0)
+        mean_duration = float(peer_stats.get("duration_mean", 180.0))
 
-    def calculate_spatial_component(self, spatial_cluster_density: float = 0.0) -> float:
-        """
-        Spatial Signal (+0 to 15 points).
-        Evaluates spatial proximity density of identical work categories within same district authority.
-        """
-        points = spatial_cluster_density * 15.0
-        return float(np.clip(points, 0.0, 15.0))
+        if mean_duration == 0:
+            return 0.0
 
-    def calculate_evidence_component(self, has_official_images: bool = False, evidence_issue_flag: bool = False) -> float:
-        """
-        Evidence Issue Placeholder Hook (+0 to 10 points).
-        Default neutral value if photo/verification evidence isn't fully wired in yet.
-        Does NOT penalize if evidence is simply unavailable (Feature 9 fairness rule).
-        """
-        if evidence_issue_flag:
-            return 10.0 # Conflicting evidence flag
-        elif not has_official_images:
-            return 2.0  # Neutral missing image placeholder (does not elevate risk significantly)
+        ratio = duration / mean_duration
+        if ratio <= 1.2:
+            return 0.0
+        elif ratio <= 1.5:
+            return 50.0
+        elif ratio <= 2.0:
+            return 80.0
+        else:
+            return 100.0
+
+    def calculate_payment_pattern_score(self, project: Dict[str, Any]) -> float:
+        """Flags fiscal rush patterns (e.g. >70% disbursements occurring in March)."""
+        is_march_rush = bool(project.get("is_march_rush", False))
+        disbursement_ratio = float(project.get("fiscal_rush_ratio", 0.0) or 0.0)
+
+        if is_march_rush or disbursement_ratio > 0.70:
+            return 85.0
+        elif disbursement_ratio > 0.50:
+            return 40.0
         return 0.0
 
-    def evaluate_project_risk(
-        self,
-        project: Dict[str, Any],
-        peer_analysis: Dict[str, Any],
-        spatial_density: float = 0.10,
-        is_march_rush: bool = False
-    ) -> Dict[str, Any]:
-        """
-        Evaluates project risk and decomposes it cleanly into ADDITIVE NAMED components.
-        """
-        amount = float(project.get("disbursed_amount_inr", 0) or project.get("sanctioned_amount_inr", 0))
-        peer_stats = peer_analysis.get("peer_stats", {})
-        peer_mean = peer_stats.get("mean", amount)
-        peer_std = peer_stats.get("std", 0.0)
-        peer_status = peer_stats.get("peer_status", "SUFFICIENT_PEER_DATA")
+    def calculate_spatial_signal_score(self, project: Dict[str, Any]) -> float:
+        """Calculates risk density based on high-risk geographic clustering."""
+        nearby_risk_ratio = float(project.get("spatial_risk_cluster_ratio", 0.0) or 0.0)
+        return min(100.0, nearby_risk_ratio * 100.0)
 
-        # 1. Cost Anomaly Component (+0 to 30)
-        cost_pts = self.calculate_cost_component(amount, peer_mean, peer_std, peer_status)
+    def calculate_evidence_issue_score(self, project: Dict[str, Any]) -> float:
+        """
+        Calculates score based ON CONTRADICTORY EVIDENCE ONLY.
+        NEVER penalizes missing or unavailable evidence (Fairness Safeguard).
+        """
+        has_contradiction = bool(project.get("evidence_contradiction_flag", False))
+        if has_contradiction:
+            return 100.0
+        return 0.0
 
-        # 2. Delay Anomaly Component (+0 to 25)
-        delay_pts = self.calculate_delay_component(
-            project.get("current_stage", "COMPLETION_REPORTED"),
-            project.get("completion_month"),
-            project.get("fiscal_year", "2024-2025")
+    def evaluate_project_risk(self, project: Dict[str, Any], peer_stats: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Evaluates project risk and produces explainable additive component breakdown.
+        """
+        cost_score = self.calculate_cost_anomaly_score(project, peer_stats)
+        delay_score = self.calculate_delay_anomaly_score(project, peer_stats)
+        payment_score = self.calculate_payment_pattern_score(project)
+        spatial_score = self.calculate_spatial_signal_score(project)
+        evidence_score = self.calculate_evidence_issue_score(project)
+
+        # Explicit Weighted Additive Formula
+        composite_score = round(
+            (0.25 * cost_score) +
+            (0.25 * delay_score) +
+            (0.25 * payment_score) +
+            (0.15 * spatial_score) +
+            (0.10 * evidence_score),
+            2
         )
 
-        # 3. Payment Pattern Component (+0 to 20)
-        payment_pts = self.calculate_payment_component(
-            project.get("expenditure_month"),
-            is_march_rush
-        )
+        iso_score = 0.0
+        if self.is_fitted and self.iso_forest:
+            features = np.array([[cost_score, delay_score, payment_score, spatial_score, evidence_score]])
+            decision = self.iso_forest.decision_function(features)[0]
+            iso_score = float(round((1.0 - decision) * 50.0, 2))
 
-        # 4. Spatial Signal Component (+0 to 15)
-        spatial_pts = self.calculate_spatial_component(spatial_density)
-
-        # 5. Evidence Issue Component (+0 to 10)
-        evidence_pts = self.calculate_evidence_component(project.get("has_official_images", False))
-
-        # Composite Additive Risk Score (0–100)
-        total_risk_score = round(cost_pts + delay_pts + payment_pts + spatial_pts + evidence_pts, 2)
-        total_risk_score = float(np.clip(total_risk_score, 0.0, 100.0))
-
-        # Isolation Forest Anomaly Wrapper Score
-        if self.is_fitted:
-            feat = np.array([[cost_pts, delay_pts, payment_pts, spatial_pts, evidence_pts]])
-            iso_score = float(self.isolation_forest.decision_function(feat)[0])
+        # Flag mapping
+        if composite_score >= 70.0:
+            flag = "POTENTIAL_ANOMALY"
+        elif composite_score >= 40.0:
+            flag = "REQUIRES_VERIFICATION"
+        elif cost_score >= 75.0:
+            flag = "HIGH_RISK_COST_DEVIATION"
         else:
-            iso_score = 0.0
+            flag = "NORMAL"
 
-        # Neutral Anomaly Flag determination
-        if total_risk_score >= 70.0:
-            anomaly_flag = "POTENTIAL_ANOMALY"
-        elif total_risk_score >= 40.0:
-            anomaly_flag = "REQUIRES_VERIFICATION"
-        elif cost_pts >= 20.0:
-            anomaly_flag = "HIGH_RISK_COST_DEVIATION"
-        else:
-            anomaly_flag = "NORMAL"
-
-        # Determine top contributing risk factor
-        components = {
-            "Cost Anomaly": cost_pts,
-            "Delay Anomaly": delay_pts,
-            "Payment Pattern": payment_pts,
-            "Spatial Signal": spatial_pts,
-            "Evidence Issue": evidence_pts
+        # Explicit top contributing factor identification
+        factors = {
+            "Cost Anomaly": 0.25 * cost_score,
+            "Timeline Delay": 0.25 * delay_score,
+            "Payment Pattern": 0.25 * payment_score,
+            "Spatial Signal": 0.15 * spatial_score,
+            "Evidence Issues": 0.10 * evidence_score
         }
-        top_factor = max(components.items(), key=lambda x: x[1])
+        top_factor = max(factors, key=factors.get)
 
-        # Clear textual explanations
-        explanations = []
-        if cost_pts > 10.0:
-            explanations.append(f"Disbursed amount ₹{amount:,.2f} deviates from peer group mean ₹{peer_mean:,.2f} (+{cost_pts:.1f} pts).")
-        if payment_pts > 10.0:
-            explanations.append(f"Disbursement registered during fiscal year-end March rush window (+{payment_pts:.1f} pts).")
-        if delay_pts > 10.0:
-            explanations.append(f"Work execution duration exceeds benchmark SLA (+{delay_pts:.1f} pts).")
-        if spatial_pts > 8.0:
-            explanations.append(f"High localized spatial clustering of identical work types (+{spatial_pts:.1f} pts).")
-        if not explanations:
-            explanations.append("Project metrics align within expected statistical baseline parameters.")
+        # Missing evidence fields explicit tracking
+        missing_evidence = []
+        if not project.get("has_official_images", False):
+            missing_evidence.append("official_agency_photos")
+        if not project.get("has_satellite_data", False):
+            missing_evidence.append("satellite_imagery")
 
         return {
-            "project_id": project.get("id") or project.get("work_id"),
-            "work_id": project.get("work_id"),
-            "work_title": project.get("work_title"),
-            "state": project.get("state"),
-            "constituency": project.get("constituency"),
-            "disbursed_amount_inr": amount,
-            "risk_score": total_risk_score,
-            "anomaly_flag": anomaly_flag,
-            "top_contributing_factor": top_factor[0],
+            "work_id": project.get("work_id", "UNKNOWN"),
+            "work_title": project.get("work_title", "Untitled Work"),
+            "state": project.get("state", "India"),
+            "constituency": project.get("constituency", "N/A"),
+            "disbursed_amount_inr": float(project.get("disbursed_amount_inr", 0) or 0),
+            "risk_score": composite_score,
+            "anomaly_flag": flag,
+            "top_contributing_factor": top_factor,
             "component_breakdown": {
-                "cost_anomaly": round(cost_pts, 2),
-                "delay_anomaly": round(delay_pts, 2),
-                "payment_pattern": round(payment_pts, 2),
-                "spatial_signal": round(spatial_pts, 2),
-                "evidence_issue": round(evidence_pts, 2)
+                "cost_anomaly": round(cost_score, 2),
+                "delay_anomaly": round(delay_score, 2),
+                "payment_pattern": round(payment_score, 2),
+                "spatial_signal": round(spatial_score, 2),
+                "evidence_issue": round(evidence_score, 2),
+                "isolation_forest_auxiliary_score": iso_score
             },
-            "explanation": {
-                "summary": "; ".join(explanations),
-                "isolation_forest_anomaly_score": round(iso_score, 4),
-                "peer_group_id": peer_stats.get("peer_group_id", "UNKNOWN"),
-                "peer_status": peer_stats.get("peer_status", "SUFFICIENT_PEER_DATA")
+            "missing_evidence_fields": missing_evidence,
+            "engine_metadata": {
+                "model_version": RISK_ENGINE_VERSION,
+                "rules_version": RULES_VERSION,
+                "peer_cohort_sample_size": peer_stats.get("sample_size", 0)
             },
             "provenance": {
-                "source": project.get("source", "data.gov.in / eSAKSHI"),
+                "source": project.get("source", "eSAKSHI Official Public Export"),
                 "source_type": project.get("source_type", "OFFICIAL_PUBLIC"),
                 "is_synthetic": project.get("is_synthetic", False)
             }

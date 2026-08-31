@@ -14,6 +14,9 @@ from typing import Dict, Any, List
 from adapters.synthetic_process_data import STAGE_BENCHMARKS
 
 
+SLA_ANALYZER_VERSION = "v1.0.0"
+
+
 class SLABottleneckAnalyzer:
     def analyze_project_bottleneck(
         self,

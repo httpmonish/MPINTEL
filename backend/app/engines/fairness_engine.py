@@ -1,58 +1,117 @@
 """
-Feature 9: Explain-the-Absence & Fairness Engine
-Enforces the mandatory fairness rule:
-1. Missing evidence != Contradictory evidence.
-2. Never automatically increase Risk Score solely because citizen evidence or satellite data is unavailable.
-3. Provides explicit region connectivity safeguards for remote/hilly/tribal areas.
+Feature 9: Explain-the-Absence / Fairness Safeguard Engine (Phase 5 Step 4)
+Consolidates evidence signal evaluation to guarantee that missing or unavailable data
+NEVER numerically penalizes a project's Risk Score or Verification Confidence.
+
+Shared Utility:
+resolve_evidence_status() -> Returns one of:
+- PRESENT_SUPPORTS (✅)
+- PRESENT_CONTRADICTS (❌)
+- PRESENT_INCONCLUSIVE (🟡)
+- PARTIAL_CONCERN (⚠️)
+- UNAVAILABLE (—)
+
+Strict Fairness Rule:
+UNAVAILABLE signals return 0.0 penalty impact, and populate the `missing_evidence_fields` list.
 """
 
 from typing import Dict, Any, List
 
 
+FAIRNESS_ENGINE_VERSION = "v1.0.0"
+
+
 class FairnessSafeguardEngine:
-    # List of known low-connectivity / remote district keywords in India
-    REMOTE_DISTRICT_KEYWORDS = [
-        "LADAKH", "KARGIL", "ARUNACHAL", "SUKMA", "BIJAPUR", "DANTEWADA",
-        "LAHAUL", "SPITI", "GADCHIROLI", "MALKANGIRI", "NICOBAR", "KISTWAR"
-    ]
-
-    def is_remote_or_low_connectivity(self, state: str, district: str) -> bool:
-        """Determines if project location is in a recognized low-connectivity zone."""
-        location_str = f"{state} {district}".upper()
-        return any(keyword in location_str for keyword in self.REMOTE_DISTRICT_KEYWORDS)
-
-    def apply_fairness_safeguard(
-        self,
-        raw_risk_score: float,
-        verification_confidence: float,
-        independent_evidence_status: str,
-        state: str,
-        district: str
+    @staticmethod
+    def resolve_evidence_status(
+        is_available: bool,
+        is_supportive: bool = False,
+        is_contradictory: bool = False,
+        is_partial_concern: bool = False
     ) -> Dict[str, Any]:
         """
-        Adjusts risk analysis interpretability to prevent penalizing remote regions.
+        Consolidated shared evidence evaluator.
+        Guarantees UNAVAILABLE evidence returns zero numerical penalty.
         """
-        is_remote = self.is_remote_or_low_connectivity(state, district)
+        if not is_available:
+            return {
+                "status_code": "UNAVAILABLE",
+                "symbol": "—",
+                "label": "— UNAVAILABLE",
+                "penalty_score": 0.0,
+                "is_missing": True,
+                "description": "Independent evidence source currently unavailable for this location."
+            }
 
-        # Mandatory Rule: If independent evidence is simply unavailable (not conflicting),
-        # ensure risk score is NOT artificially elevated.
-        adjusted_risk_score = raw_risk_score
-        fairness_note = None
+        if is_contradictory:
+            return {
+                "status_code": "PRESENT_CONTRADICTS",
+                "symbol": "❌",
+                "label": "❌ CONTRADICTS_CLAIM",
+                "penalty_score": 50.0,
+                "is_missing": False,
+                "description": "Submitted evidence directly contradicts official claims or location."
+            }
 
-        if independent_evidence_status == "INDEPENDENT_EVIDENCE_UNAVAILABLE":
-            fairness_note = "Independent verification evidence is currently unavailable. Risk score is computed strictly from workflow and peer metrics without penalizing for missing citizen upload."
-            if is_remote:
-                fairness_note += " Location identified as remote/low-connectivity region; priority for physical mobile inspector."
+        if is_partial_concern:
+            return {
+                "status_code": "PARTIAL_CONCERN",
+                "symbol": "⚠️",
+                "label": "⚠️ PARTIAL_CONCERN",
+                "penalty_score": 20.0,
+                "is_missing": False,
+                "description": "Evidence exhibits partial discrepancy requiring secondary review."
+            }
 
-        elif independent_evidence_status == "EVIDENCE_CONFLICT":
-            fairness_note = "Potential evidence conflict detected (e.g. photo overlap or location discrepancy). Requires manual verification."
+        if is_supportive:
+            return {
+                "status_code": "PRESENT_SUPPORTS",
+                "symbol": "✅",
+                "label": "✅ SUPPORTS_CLAIM",
+                "penalty_score": 0.0,
+                "is_missing": False,
+                "description": "Independent evidence fully validates project progress and location."
+            }
 
         return {
-            "adjusted_risk_score": round(adjusted_risk_score, 2),
-            "raw_risk_score": round(raw_risk_score, 2),
-            "verification_confidence": round(verification_confidence, 2),
-            "independent_evidence_status": independent_evidence_status,
-            "is_low_connectivity_region": is_remote,
-            "fairness_safeguard_applied": True,
-            "fairness_note": fairness_note
+            "status_code": "PRESENT_INCONCLUSIVE",
+            "symbol": "🟡",
+            "label": "🟡 INCONCLUSIVE",
+            "penalty_score": 0.0,
+            "is_missing": False,
+            "description": "Evidence present but image quality or cloud cover limits conclusive verification."
+        }
+
+    def run_cohort_fairness_audit(
+        self,
+        full_evidence_cohort: List[Dict[str, Any]],
+        low_evidence_cohort: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Validates that low-evidence cohort does NOT suffer from artificially inflated Risk Scores.
+        """
+        avg_full_risk = round(sum(p.get("risk_score", 0) for p in full_evidence_cohort) / max(1, len(full_evidence_cohort)), 2)
+        avg_low_risk = round(sum(p.get("risk_score", 0) for p in low_evidence_cohort) / max(1, len(low_evidence_cohort)), 2)
+
+        risk_bias_delta = round(avg_low_risk - avg_full_risk, 2)
+        is_fair = risk_bias_delta <= 5.0  # Bias delta must be negligible (< 5 points)
+
+        return {
+            "test_name": "Controlled Low-Connectivity / Sparse-Evidence Fairness Audit",
+            "is_fairness_safeguard_passed": is_fair,
+            "full_evidence_cohort_count": len(full_evidence_cohort),
+            "low_evidence_cohort_count": len(low_evidence_cohort),
+            "average_risk_full_evidence": avg_full_risk,
+            "average_risk_low_evidence": avg_low_risk,
+            "risk_score_bias_delta": risk_bias_delta,
+            "fairness_verdict": (
+                "PASSED: Low-connectivity sparse-evidence cohort shows zero systemic risk inflation. "
+                "Absence of independent evidence is correctly isolated as unavailable, not penalizing scores."
+                if is_fair
+                else "FAILED: Detected risk score penalty inflation on low-evidence cohort."
+            ),
+            "metadata": {
+                "engine_version": FAIRNESS_ENGINE_VERSION,
+                "is_synthetic_test_cohort": True
+            }
         }

@@ -17,6 +17,9 @@ import math
 from typing import Dict, List, Any
 
 
+OPTIMIZER_ENGINE_VERSION = "v1.0.0"
+
+
 class InspectionOptimizerEngine:
     WEIGHT_RISK: float = 0.40
     WEIGHT_CONFIDENCE_GAP: float = 0.30
@@ -43,18 +46,11 @@ class InspectionOptimizerEngine:
         """
         Computes composite priority score with explicit factor reasoning breakdown.
         """
-        # 1. Risk Contribution (0-100 * 0.40)
         risk_contrib = round(risk_score * self.WEIGHT_RISK, 2)
-
-        # 2. Verification Confidence Gap Contribution ((100 - vert_conf) * 0.30)
         confidence_gap = max(0.0, 100.0 - verification_confidence)
         conf_contrib = round(confidence_gap * self.WEIGHT_CONFIDENCE_GAP, 2)
-
-        # 3. Project Value Contribution (₹25L normalized to 100 * 0.20)
         value_score = min(100.0, (disbursed_amount / 2500000.0) * 100.0)
         value_contrib = round(value_score * self.WEIGHT_PROJECT_VALUE, 2)
-
-        # 4. Distance Penalty (50km normalized to 100 * 0.10)
         dist_penalty_score = min(100.0, (distance_km / 50.0) * 100.0)
         dist_penalty = round(dist_penalty_score * self.WEIGHT_DISTANCE_PENALTY, 2)
 
@@ -91,7 +87,6 @@ class InspectionOptimizerEngine:
         capacity = inspector.get("max_weekly_capacity", 8)
         state_jurisdiction = inspector.get("jurisdiction_state", "")
 
-        # Filter candidate projects matching inspector state jurisdiction
         jurisdiction_candidates = [
             p for p in candidate_projects
             if not state_jurisdiction or state_jurisdiction.lower() in p.get("state", "").lower()
@@ -100,7 +95,6 @@ class InspectionOptimizerEngine:
         if not jurisdiction_candidates:
             jurisdiction_candidates = candidate_projects[:20]
 
-        # Score candidates
         scored_candidates = []
         for p in jurisdiction_candidates:
             p_lat = p.get("latitude", base_lat)
@@ -128,18 +122,15 @@ class InspectionOptimizerEngine:
                 "priority_analysis": p_analysis
             })
 
-        # Sort descending by composite priority score
         scored_candidates.sort(key=lambda x: x["priority_analysis"]["composite_priority_score"], reverse=True)
         top_candidates = scored_candidates[:capacity]
 
-        # Greedy nearest-neighbor route ordering starting from inspector base
         current_lat, current_lon = base_lat, base_lon
         remaining = list(top_candidates)
         ordered_route = []
 
         visit_order = 1
         while remaining:
-            # Pick nearest candidate from current position
             nearest_idx = min(
                 range(len(remaining)),
                 key=lambda i: self.haversine_km(current_lat, current_lon, remaining[i]["latitude"], remaining[i]["longitude"])

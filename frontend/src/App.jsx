@@ -16,7 +16,10 @@ import {
   Navigation,
   UserCheck,
   Zap,
-  BarChart3
+  HelpCircle,
+  History,
+  Check,
+  Send
 } from 'lucide-react';
 
 import L from 'leaflet';
@@ -44,6 +47,15 @@ export default function App() {
   const [bottleneckSummary, setBottleneckSummary] = useState(null);
   const [plannerLoading, setPlannerLoading] = useState(false);
 
+  // Phase 5 Audit Ledger & "Why?" Modal State
+  const [activeWhyEntry, setActiveWhyEntry] = useState(null);
+  const [whyModalOpen, setWhyModalOpen] = useState(false);
+  const [whyLoading, setWhyLoading] = useState(false);
+  const [officerDecisionInput, setOfficerDecisionInput] = useState('APPROVED');
+  const [officerNotesInput, setOfficerNotesInput] = useState('');
+  const [decisionSubmitting, setDecisionSubmitting] = useState(false);
+  const [fairnessTestResult, setFairnessTestResult] = useState(null);
+
   // Citizen PWA Form State
   const [pwaLat, setPwaLat] = useState('25.0964');
   const [pwaLon, setPwaLon] = useState('85.3134');
@@ -59,6 +71,7 @@ export default function App() {
     fetchProjects();
     fetchBottleneckSummary();
     fetchOptimizerPlan();
+    fetchFairnessTestSummary();
   }, [selectedState, selectedFlag]);
 
   useEffect(() => {
@@ -89,10 +102,7 @@ export default function App() {
   const fetchBottleneckSummary = async () => {
     try {
       const res = await fetch('/api/v1/bottleneck/summary');
-      if (res.ok) {
-        const data = await res.json();
-        setBottleneckSummary(data);
-      }
+      if (res.ok) setBottleneckSummary(await res.json());
     } catch (err) {
       console.error('Failed to fetch bottleneck summary:', err);
     }
@@ -102,14 +112,20 @@ export default function App() {
     setPlannerLoading(true);
     try {
       const res = await fetch('/api/v1/optimizer/plan');
-      if (res.ok) {
-        const data = await res.json();
-        setOptimizerPlan(data);
-      }
+      if (res.ok) setOptimizerPlan(await res.json());
     } catch (err) {
       console.error('Failed to fetch optimizer plan:', err);
     } finally {
       setPlannerLoading(false);
+    }
+  };
+
+  const fetchFairnessTestSummary = async () => {
+    try {
+      const res = await fetch('/api/v1/fairness/test-summary');
+      if (res.ok) setFairnessTestResult(await res.json());
+    } catch (err) {
+      console.error('Failed to fetch fairness test summary:', err);
     }
   };
 
@@ -134,16 +150,61 @@ export default function App() {
     }
   };
 
+  // Reusable "Why?" Click-Through Trigger Handler (Phase 5)
+  const openWhyModalForProject = async (workId, decisionType = 'RISK_ASSESSMENT') => {
+    setWhyLoading(true);
+    setWhyModalOpen(true);
+    try {
+      const cleanId = encodeURIComponent(workId);
+      const res = await fetch(`/api/v1/ledger/${cleanId}`);
+      if (res.ok) {
+        const data = await res.json();
+        const history = data.ledger_history || [];
+        // Match specific decision type if available, else latest
+        const match = history.find(e => e.decision_type === decisionType) || history[0];
+        setActiveWhyEntry(match || null);
+      }
+    } catch (err) {
+      console.error('Failed to fetch why ledger entry:', err);
+    } finally {
+      setWhyLoading(false);
+    }
+  };
+
+  const submitOfficerDecision = async (e) => {
+    e.preventDefault();
+    if (!activeWhyEntry) return;
+
+    setDecisionSubmitting(true);
+    try {
+      const res = await fetch(`/api/v1/ledger/entry/${activeWhyEntry.entry_id}/decision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          human_decision: officerDecisionInput,
+          outcome_notes: officerNotesInput || 'Officer reviewed and recorded decision.'
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setActiveWhyEntry(data.updated_entry);
+        setOfficerNotesInput('');
+      }
+    } catch (err) {
+      console.error('Failed to submit officer decision:', err);
+    } finally {
+      setDecisionSubmitting(false);
+    }
+  };
+
   const initMap = () => {
     if (!mapContainerRef.current) return;
-    
-    // Destroy previous Leaflet map instance if exists
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
     }
 
-    // Default center (India centroid)
     const map = L.map(mapContainerRef.current).setView([22.5937, 78.9629], 5);
     mapInstanceRef.current = map;
 
@@ -166,7 +227,6 @@ export default function App() {
       const color = routeColors[rIdx % routeColors.length];
       const waypoints = [];
 
-      // Base location marker
       const baseLat = inspRoute.base_location.lat;
       const baseLon = inspRoute.base_location.lon;
       waypoints.push([baseLat, baseLon]);
@@ -181,7 +241,6 @@ export default function App() {
       }).addTo(map);
       baseMarker.bindPopup(`<b>${inspRoute.inspector_name}</b><br/>Base Office (${inspRoute.jurisdiction_state})`);
 
-      // Assigned project markers & polylines
       inspRoute.assigned_route.forEach((stop) => {
         const lat = stop.latitude;
         const lon = stop.longitude;
@@ -207,7 +266,6 @@ export default function App() {
         `);
       });
 
-      // Route polyline connecting visits
       if (waypoints.length > 1) {
         L.polyline(waypoints, {
           color: color,
@@ -300,9 +358,9 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              Pratyaksh <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">Phase 4 — Process & Optimizer</span>
+              Pratyaksh <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">Phase 5 — Ledger & Fairness</span>
             </h1>
-            <p className="text-xs text-slate-400">AI-Powered MPLADS Monitoring, SLA Bottlenecks & Capacity Inspection Routing</p>
+            <p className="text-xs text-slate-400">AI Audit Ledger, "Why?" Click-Through Traceability & Remote Cohort Safeguards</p>
           </div>
         </div>
 
@@ -324,6 +382,19 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {/* FEATURE 9: FAIRNESS SAFEGUARD LIVE DEMO BANNER */}
+      {fairnessTestResult && (
+        <div className="bg-emerald-950/40 border-b border-emerald-800/40 px-6 py-2.5 flex items-center justify-between text-xs text-emerald-300 font-mono">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span><strong>Fairness Safeguard Active:</strong> {fairnessTestResult.fairness_verdict}</span>
+          </div>
+          <span className="bg-emerald-900/60 px-2 py-0.5 rounded text-[10px] text-emerald-200 border border-emerald-700">
+            Bias Delta: {fairnessTestResult.risk_score_bias_delta} points
+          </span>
+        </div>
+      )}
 
       {/* TAB 1: RISK & VERIFICATION MATRIX */}
       {activeTab === 'risk' && (
@@ -380,8 +451,8 @@ export default function App() {
                     <th className="py-4 px-6">State / Region</th>
                     <th className="py-4 px-6">Disbursed (₹)</th>
                     <th className="py-4 px-6">Risk Score</th>
+                    <th className="py-4 px-6">Why? (Ledger)</th>
                     <th className="py-4 px-6">Top Factor</th>
-                    <th className="py-4 px-6">Provenance</th>
                     <th className="py-4 px-6 text-right">Inspect</th>
                   </tr>
                 </thead>
@@ -391,34 +462,40 @@ export default function App() {
                   ) : filteredProjects.map((p) => (
                     <tr 
                       key={p.work_id}
-                      onClick={() => handleRowClick(p)}
                       className="hover:bg-indigo-950/20 cursor-pointer transition-colors group"
                     >
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6" onClick={() => handleRowClick(p)}>
                         <div className="font-semibold text-slate-100 group-hover:text-indigo-400 transition-colors">{p.work_title}</div>
                         <div className="text-xs text-slate-500 font-mono mt-0.5">{p.work_id}</div>
                       </td>
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6" onClick={() => handleRowClick(p)}>
                         <div className="flex items-center gap-1.5 text-slate-300">
                           <MapPin className="w-3.5 h-3.5 text-slate-500" />
                           {p.state}
                         </div>
                       </td>
-                      <td className="py-4 px-6 font-mono text-slate-200">
+                      <td className="py-4 px-6 font-mono text-slate-200" onClick={() => handleRowClick(p)}>
                         ₹{p.disbursed_amount_inr ? p.disbursed_amount_inr.toLocaleString('en-IN') : '0'}
                       </td>
-                      <td className="py-4 px-6">{getRiskScoreBadge(p.risk_score)}</td>
+                      <td className="py-4 px-6" onClick={() => handleRowClick(p)}>{getRiskScoreBadge(p.risk_score)}</td>
+                      
+                      {/* PHASE 5: REUSABLE "WHY?" TRIGGER BUTTON */}
                       <td className="py-4 px-6">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); openWhyModalForProject(p.work_id, 'RISK_ASSESSMENT'); }}
+                          className="px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20 text-indigo-300 text-xs font-bold flex items-center gap-1.5 transition"
+                        >
+                          <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+                          Why?
+                        </button>
+                      </td>
+
+                      <td className="py-4 px-6" onClick={() => handleRowClick(p)}>
                         <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
                           {p.top_contributing_factor}
                         </span>
                       </td>
-                      <td className="py-4 px-6">
-                        <span className="inline-flex items-center text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800">
-                          Official eSAKSHI
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-right">
+                      <td className="py-4 px-6 text-right" onClick={() => handleRowClick(p)}>
                         <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-indigo-400 transition-all inline" />
                       </td>
                     </tr>
@@ -430,7 +507,7 @@ export default function App() {
         </main>
       )}
 
-      {/* TAB 2: INSPECTION PLANNER & MAP VIEW (PHASE 4 FEATURE) */}
+      {/* TAB 2: INSPECTION PLANNER & MAP VIEW */}
       {activeTab === 'planner' && (
         <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
 
@@ -505,12 +582,11 @@ export default function App() {
           {/* Interactive Map & Route Schedule Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            {/* Map Container (Leaflet OSM Tiles + Spatial Polylines) */}
             <div className="lg:col-span-7 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-2 overflow-hidden shadow-2xl flex flex-col h-[520px]">
               <div className="px-4 py-2 border-b border-slate-800 flex justify-between items-center bg-slate-950/80 rounded-t-xl">
                 <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-indigo-400" />
-                  Spatial Route & Risk Map (MapLibre / Leaflet OSM Vector Canvas)
+                  Spatial Route & Risk Map (Leaflet OSM Vector Canvas)
                 </span>
                 <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> High Risk
@@ -521,7 +597,6 @@ export default function App() {
               <div ref={mapContainerRef} className="flex-1 w-full rounded-b-xl z-10"></div>
             </div>
 
-            {/* Ordered Route Stop List (Feature 7 Actionable Output) */}
             <div className="lg:col-span-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 flex flex-col h-[520px] shadow-2xl">
               <h3 className="text-sm font-bold text-slate-200 border-b border-slate-800 pb-3 flex items-center justify-between">
                 <span>Ordered Inspection Visit Schedule</span>
@@ -540,8 +615,7 @@ export default function App() {
                   ).map((stop, idx) => (
                     <div 
                       key={stop.work_id + idx}
-                      onClick={() => handleRowClick(stop)}
-                      className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-indigo-500/50 cursor-pointer transition space-y-2 group"
+                      className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-indigo-500/50 transition space-y-2 group"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
@@ -558,22 +632,25 @@ export default function App() {
                         </span>
                       </div>
 
-                      {/* Explicit Priority Factor Reasoning */}
                       {stop.priority_analysis && (
                         <div className="text-[11px] text-slate-300 bg-slate-900/90 p-2.5 rounded-lg border border-slate-800 space-y-1">
                           <div className="font-semibold text-indigo-300">{stop.priority_analysis.reasoning_summary}</div>
-                          <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 pt-1 border-t border-slate-800">
-                            <span>Risk Contrib: <strong className="text-slate-200">+{stop.priority_analysis.factor_breakdown.risk_contribution}</strong></span>
-                            <span>Confidence Gap: <strong className="text-slate-200">+{stop.priority_analysis.factor_breakdown.confidence_gap_contribution}</strong></span>
-                          </div>
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
                         <span>Leg Distance: <strong className="text-slate-300">{stop.leg_distance_km || stop.distance_from_base_km} km</strong></span>
-                        <span className="text-indigo-400 group-hover:underline flex items-center gap-1">
-                          View Details <ChevronRight className="w-3 h-3" />
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openWhyModalForProject(stop.work_id, 'OPTIMIZER_ASSIGNMENT')}
+                            className="px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold flex items-center gap-1"
+                          >
+                            <HelpCircle className="w-3 h-3" /> Why?
+                          </button>
+                          <button onClick={() => handleRowClick(stop)} className="text-slate-400 hover:text-white text-[10px]">
+                            Details &rarr;
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -585,15 +662,14 @@ export default function App() {
         </main>
       )}
 
-      {/* EXTENDED PROJECT DETAIL MODAL (PHASES 2, 3, AND 4 TIED TOGETHER) */}
+      {/* EXTENDED PROJECT DETAIL MODAL */}
       {selectedProject && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-end p-4">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-3xl h-full max-h-[92vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-right duration-200">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-3xl h-full max-h-[92vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden">
             
-            {/* Modal Header */}
             <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950">
               <div>
-                <span className="text-xs font-mono text-indigo-400 uppercase tracking-wide">Comprehensive Project Intelligence (Phases 2, 3, 4)</span>
+                <span className="text-xs font-mono text-indigo-400 uppercase tracking-wide">Comprehensive Project Intelligence</span>
                 <h2 className="text-lg font-bold text-slate-100 mt-1">{selectedProject.work_title}</h2>
                 <p className="text-xs text-slate-400 font-mono mt-0.5">{selectedProject.work_id}</p>
               </div>
@@ -605,15 +681,21 @@ export default function App() {
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
-              {/* THREE CORE METRIC CARDS (STRICTLY SEPARATE) */}
+              {/* THREE CORE METRIC CARDS WITH "WHY?" BUTTONS */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
-                {/* 1. Risk Score Card (Phase 2) */}
-                <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 space-y-2">
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">AI Risk Score (Phase 2)</span>
+                {/* 1. Risk Score Card */}
+                <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 space-y-2 relative">
+                  <button 
+                    onClick={() => openWhyModalForProject(selectedProject.work_id, 'RISK_ASSESSMENT')}
+                    className="absolute right-3 top-3 p-1 rounded bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20"
+                    title="Audit Traceability Ledger"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </button>
+                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">AI Risk Score</span>
                   <div className="text-2xl font-extrabold text-white">
                     {selectedProject.risk_score.toFixed(1)} <span className="text-xs font-normal text-slate-500">/ 100</span>
                   </div>
@@ -622,9 +704,16 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 2. Verification Confidence Card (Phase 3) */}
-                <div className="bg-slate-950/90 border border-emerald-900/40 rounded-2xl p-4 space-y-2">
-                  <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wide">Verification Conf (Phase 3)</span>
+                {/* 2. Verification Confidence Card */}
+                <div className="bg-slate-950/90 border border-emerald-900/40 rounded-2xl p-4 space-y-2 relative">
+                  <button 
+                    onClick={() => openWhyModalForProject(selectedProject.work_id, 'VERIFICATION_TRIANGULATION')}
+                    className="absolute right-3 top-3 p-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                    title="Audit Traceability Ledger"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </button>
+                  <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wide">Verification Conf</span>
                   <div className="text-2xl font-extrabold text-emerald-300">
                     {verificationData ? verificationData.verification_confidence.toFixed(0) : '0'} <span className="text-xs font-normal text-slate-500">/ 100</span>
                   </div>
@@ -633,9 +722,16 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 3. SLA Delay Bottleneck Card (Phase 4) */}
-                <div className="bg-slate-950/90 border border-amber-900/40 rounded-2xl p-4 space-y-2">
-                  <span className="text-[11px] font-semibold text-amber-400 uppercase tracking-wide">Max SLA Delay (Phase 4)</span>
+                {/* 3. SLA Delay Bottleneck Card */}
+                <div className="bg-slate-950/90 border border-amber-900/40 rounded-2xl p-4 space-y-2 relative">
+                  <button 
+                    onClick={() => openWhyModalForProject(selectedProject.work_id, 'BOTTLENECK_ANALYSIS')}
+                    className="absolute right-3 top-3 p-1 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
+                    title="Audit Traceability Ledger"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </button>
+                  <span className="text-[11px] font-semibold text-amber-400 uppercase tracking-wide">Max SLA Delay</span>
                   <div className="text-2xl font-extrabold text-amber-300">
                     {bottleneckData && bottleneckData.has_bottleneck ? `${bottleneckData.max_deviation_multiple}×` : '1.0×'}
                     <span className="text-xs font-normal text-slate-500"> Benchmark</span>
@@ -647,7 +743,7 @@ export default function App() {
 
               </div>
 
-              {/* PHASE 4: STAGE-WISE BOTTLENECK PANEL (FEATURE 6) */}
+              {/* STAGE-WISE BOTTLENECK PANEL */}
               <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 space-y-3">
                 <h3 className="text-sm font-bold text-slate-200 flex items-center justify-between">
                   <span className="flex items-center gap-2">
@@ -683,7 +779,7 @@ export default function App() {
                 )}
               </div>
 
-              {/* PHASE 3: MULTI-SIGNAL TRIANGULATION PANEL */}
+              {/* MULTI-SIGNAL TRIANGULATION PANEL */}
               <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-800">
                   <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -728,6 +824,162 @@ export default function App() {
               </div>
 
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* PHASE 5: REUSABLE "WHY?" AUDIT LEDGER MODAL */}
+      {whyModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                  <HelpCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    AI Decision Audit Ledger <span className="text-xs font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Feature 8</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">Full Decision Traceability, Provenance & Human Feedback Ledger</p>
+                </div>
+              </div>
+              <button onClick={() => setWhyModalOpen(false)} className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto space-y-5 text-xs">
+              {whyLoading ? (
+                <div className="py-12 text-center text-slate-400">Loading audit ledger record...</div>
+              ) : !activeWhyEntry ? (
+                <div className="py-12 text-center text-slate-400">No ledger entry found for this score.</div>
+              ) : (
+                <>
+                  {/* Top Score Banner */}
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wide block">Decision Type</span>
+                      <strong className="text-sm text-indigo-400 font-bold">{activeWhyEntry.decision_type}</strong>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">ID: {activeWhyEntry.entry_id}</div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wide block">Computed Score</span>
+                      <strong className="text-2xl font-extrabold text-white font-mono">{activeWhyEntry.computed_score}</strong>
+                    </div>
+                  </div>
+
+                  {/* Component Breakdown */}
+                  <div>
+                    <h4 className="font-bold text-slate-200 mb-2 uppercase text-[10px] tracking-wider text-slate-400">Named Component Factor Breakdown</h4>
+                    <div className="grid grid-cols-2 gap-2 font-mono">
+                      {Object.entries(activeWhyEntry.component_breakdown || {}).map(([key, val]) => (
+                        <div key={key} className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center">
+                          <span className="text-slate-400 text-[11px]">{key.replace('_', ' ')}:</span>
+                          <strong className="text-slate-100">{typeof val === 'number' ? val.toFixed(1) : String(val)}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Data Sources & Provenance */}
+                  <div>
+                    <h4 className="font-bold text-slate-200 mb-2 uppercase text-[10px] tracking-wider text-slate-400">Data Sources & Provenance Tags</h4>
+                    <div className="space-y-1.5">
+                      {(activeWhyEntry.data_sources_used || []).map((src, idx) => (
+                        <div key={idx} className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between">
+                          <span className="text-slate-300 font-medium">{src.source_name}</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${src.is_synthetic ? 'bg-amber-950/60 text-amber-400 border border-amber-800' : 'bg-emerald-950/60 text-emerald-400 border border-emerald-800'}`}>
+                            {src.is_synthetic ? 'Synthetic Demo Data' : 'eSAKSHI Official Public'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Missing Evidence Fields (Neutral Presentation - Feature 9) */}
+                  <div>
+                    <h4 className="font-bold text-slate-200 mb-2 uppercase text-[10px] tracking-wider text-slate-400">Unavailable Evidence Signals (Fairness Safeguard)</h4>
+                    {activeWhyEntry.missing_evidence_fields && activeWhyEntry.missing_evidence_fields.length > 0 ? (
+                      <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300 space-y-1">
+                        <div className="text-amber-400 font-semibold flex items-center gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          Independent evidence unavailable: {activeWhyEntry.missing_evidence_fields.join(', ')}
+                        </div>
+                        <p className="text-[11px] text-slate-400">
+                          Strict Fairness Safeguard Rule: Unavailable evidence fields are isolated as missing and return zero numerical penalty to score calculations.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-emerald-400 text-[11px]">
+                        ✓ All expected evidence signals available for calculation.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Version & Timestamps */}
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono pt-2 border-t border-slate-800">
+                    <span>Engine: {activeWhyEntry.model_version} | Rules: {activeWhyEntry.rules_version}</span>
+                    <span>Timestamp: {new Date(activeWhyEntry.computed_at).toLocaleString()}</span>
+                  </div>
+
+                  {/* Human Officer Action & Feedback Ledger Form */}
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <h4 className="font-bold text-slate-200 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <UserCheck className="w-4 h-4 text-indigo-400" />
+                        Human Officer Action Ledger
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">Learn Loop Target</span>
+                    </h4>
+
+                    {activeWhyEntry.human_decision ? (
+                      <div className="p-3 rounded-lg bg-indigo-950/40 border border-indigo-800 text-slate-200 space-y-1">
+                        <div className="font-bold text-indigo-300 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-indigo-400" />
+                          Decision Recorded: {activeWhyEntry.human_decision}
+                        </div>
+                        <div className="text-slate-400">{activeWhyEntry.outcome || 'No additional outcome notes recorded.'}</div>
+                      </div>
+                    ) : (
+                      <form onSubmit={submitOfficerDecision} className="space-y-3">
+                        <div className="grid grid-cols-3 gap-2">
+                          {['APPROVED', 'DISPATCHED_INSPECTION', 'CLEARED'].map((dec) => (
+                            <button
+                              key={dec}
+                              type="button"
+                              onClick={() => setOfficerDecisionInput(dec)}
+                              className={`py-1.5 rounded-lg border text-[11px] font-bold transition ${officerDecisionInput === dec ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'}`}
+                            >
+                              {dec}
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Enter officer notes/field inspection observations..."
+                          value={officerNotesInput}
+                          onChange={(e) => setOfficerNotesInput(e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500"
+                        />
+                        <button
+                          type="submit"
+                          disabled={decisionSubmitting}
+                          className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center justify-center gap-2 transition"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          {decisionSubmitting ? 'Recording Action...' : 'Record Officer Action to Ledger'}
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
           </div>
         </div>
       )}

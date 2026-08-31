@@ -1,19 +1,22 @@
 """
-Feature 5: Evidence Triangulation Engine (Phase 3 Step 3)
-Synthesizes multi-source independent evidence signals into Verification Confidence Score (0–100).
-STRICT SCORE SEPARATION: Verification Confidence is independent of Risk Score.
+Feature 5: Multi-Signal Evidence Triangulation Engine (Phase 3 Step 3)
+Calculates multi-signal Verification Confidence score (0-100) per project.
 
-Signal States:
-- ✅ SUPPORTS_CLAIM
-- ⚠️ PARTIAL_CONCERN
-- ❌ CONTRADICTS_CLAIM
-- 🟡 INCONCLUSIVE
-- — UNAVAILABLE
+Signals Evaluated:
+1. Official Agency Claim (25% weight)
+2. Citizen Mobile Verification (35% weight)
+3. Photo Uniqueness & Duplication Check (25% weight)
+4. Satellite Remote Sensing (15% weight)
 
-Fairness Principle: Missing / Unavailable evidence ('—') does NOT equal contradiction ('❌').
+Decoupled Design:
+Verification Confidence is SEPARATE from Risk Score.
+Missing evidence fields return '— UNAVAILABLE' status and NEVER penalize scores (Fairness Safeguard).
 """
 
 from typing import Dict, Any, Optional, List
+
+
+TRIANGULATION_ENGINE_VERSION = "v1.0.0"
 
 
 class EvidenceTriangulationEngine:
@@ -26,100 +29,129 @@ class EvidenceTriangulationEngine:
         satellite_data: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Calculates Verification Confidence (0–100) and resolves per-signal status.
+        Evaluates multi-signal verification confidence (0-100) across available inputs.
         """
+        available_signals = []
+        signal_details = {}
+        missing_fields = []
 
-        # 1. Signal 1: Agency Claim (Baseline Reference from Dataset)
+        # 1. Agency Claim Signal
         if has_agency_claim:
-            agency_status = "✅ SUPPORTS_CLAIM"
-            agency_score = 40.0
-            agency_text = "Official eSAKSHI sanction & completion report registered."
+            available_signals.append(("agency_claim", 25.0, 1.0))
+            signal_details["agency_claim"] = {
+                "status": "✅ SUPPORTS_CLAIM",
+                "score_contrib": 25.0,
+                "detail": "Official agency work recommendation & progress report recorded."
+            }
         else:
-            agency_status = "🟡 INCONCLUSIVE"
-            agency_score = 15.0
-            agency_text = "Agency sanction documentation unverified."
+            missing_fields.append("official_agency_claim")
+            signal_details["agency_claim"] = {
+                "status": "— UNAVAILABLE",
+                "score_contrib": 0.0,
+                "detail": "Agency report record unavailable."
+            }
 
-        # 2. Signal 2: Citizen Location Evidence (Feature 4)
-        if citizen_verification is None or citizen_verification.get("consistency_status") is None:
-            citizen_status = "— UNAVAILABLE"
-            citizen_score = 0.0 # Neutral missing signal
-            citizen_text = "Independent citizen mobile verification currently unavailable."
-        elif citizen_verification.get("verified"):
-            citizen_status = "✅ SUPPORTS_CLAIM"
-            citizen_score = 35.0
-            citizen_text = f"Live camera evidence captured within {citizen_verification.get('distance_to_project_meters', 0):.1f}m of site."
-        elif citizen_verification.get("consistency_status") == "LOCATION_INCONSISTENT":
-            citizen_status = "❌ CONTRADICTS_CLAIM"
-            citizen_score = 0.0
-            citizen_text = f"Capture location is {citizen_verification.get('distance_to_project_meters', 0):.1f}m away from project site."
+        # 2. Citizen Mobile Verification Signal
+        if citizen_verification:
+            is_valid = citizen_verification.get("is_valid", False)
+            if is_valid:
+                available_signals.append(("citizen_evidence", 35.0, 1.0))
+                signal_details["citizen_evidence"] = {
+                    "status": "✅ SUPPORTS_CLAIM",
+                    "score_contrib": 35.0,
+                    "detail": f"Verified via Citizen Mobile PWA live camera ({citizen_verification.get('distance_meters', 0.0):.1f}m from site)."
+                }
+            else:
+                available_signals.append(("citizen_evidence", 35.0, 0.0))
+                signal_details["citizen_evidence"] = {
+                    "status": "❌ CONTRADICTS_CLAIM",
+                    "score_contrib": 0.0,
+                    "detail": citizen_verification.get("rejection_reason", "Citizen location discrepancy.")
+                }
         else:
-            citizen_status = "🟡 INCONCLUSIVE"
-            citizen_score = 10.0
-            citizen_text = "Citizen upload requires further spatial verification."
+            missing_fields.append("citizen_live_camera")
+            signal_details["citizen_evidence"] = {
+                "status": "— UNAVAILABLE",
+                "score_contrib": 0.0,
+                "detail": "Citizen mobile evidence not yet submitted for this site."
+            }
 
-        # 3. Signal 3: Photo Similarity & Uniqueness Check (Feature 3)
-        if photo_similarity is None or not photo_similarity.get("has_photo_evidence"):
-            photo_status = "— UNAVAILABLE"
-            photo_score = 0.0 # Neutral missing signal
-            photo_text = "Completion image pHash hash unavailable."
-        elif photo_similarity.get("duplicate_detected"):
-            photo_status = "⚠️ PARTIAL_CONCERN"
-            photo_score = 0.0
-            photo_text = f"Possible duplicate evidence detected ({photo_similarity.get('max_similarity_pct', 0)}% overlap)."
+        # 3. Photo Similarity Signal
+        if photo_similarity:
+            is_dup = photo_similarity.get("is_duplicate", False)
+            if is_dup:
+                available_signals.append(("photo_uniqueness", 25.0, 0.0))
+                signal_details["photo_uniqueness"] = {
+                    "status": "❌ CONTRADICTS_CLAIM",
+                    "score_contrib": 0.0,
+                    "detail": f"Duplicate image detected! Matches {photo_similarity.get('matching_project_id')} ({photo_similarity.get('similarity_score_pct'):.1f}% similarity)."
+                }
+            else:
+                available_signals.append(("photo_uniqueness", 25.0, 1.0))
+                signal_details["photo_uniqueness"] = {
+                    "status": "✅ SUPPORTS_CLAIM",
+                    "score_contrib": 25.0,
+                    "detail": "Perceptual hashing confirms image is unique and un-duplicated."
+                }
         else:
-            photo_status = "✅ SUPPORTS_CLAIM"
-            photo_score = 15.0
-            photo_text = "Photo evidence appears unique across indexed database."
+            missing_fields.append("official_agency_photos")
+            signal_details["photo_uniqueness"] = {
+                "status": "— UNAVAILABLE",
+                "score_contrib": 0.0,
+                "detail": "No completion photo uploaded to eSAKSHI registry yet."
+            }
 
-        # 4. Signal 4: Supporting Satellite Signal (Tier 2 Sentinel-2 Hook)
-        if satellite_data is None:
-            satellite_status = "— UNAVAILABLE"
-            satellite_score = 0.0 # Structural placeholder
-            satellite_text = "Sentinel-2 satellite change detection signal unavailable."
-        elif satellite_data.get("change_detected"):
-            satellite_status = "✅ SUPPORTS_CLAIM"
-            satellite_score = 10.0
-            satellite_text = "Surface change detected in Sentinel-2 temporal imagery."
+        # 4. Satellite Data Signal
+        if satellite_data:
+            sat_status = satellite_data.get("status", "INCONCLUSIVE")
+            if sat_status == "SUPPORTS":
+                available_signals.append(("satellite", 15.0, 1.0))
+                signal_details["satellite"] = {
+                    "status": "✅ SUPPORTS_CLAIM",
+                    "score_contrib": 15.0,
+                    "detail": "Sentinel-2 remote sensing confirms structure/earthworks footprint."
+                }
+            elif sat_status == "CONTRADICTS":
+                available_signals.append(("satellite", 15.0, 0.0))
+                signal_details["satellite"] = {
+                    "status": "❌ CONTRADICTS_CLAIM",
+                    "score_contrib": 0.0,
+                    "detail": "Satellite imagery shows bare ground without planned construction."
+                }
+            else:
+                signal_details["satellite"] = {
+                    "status": "🟡 INCONCLUSIVE",
+                    "score_contrib": 0.0,
+                    "detail": "Cloud cover limits remote sensing resolution."
+                }
         else:
-            satellite_status = "🟡 INCONCLUSIVE"
-            satellite_score = 5.0
-            satellite_text = "Satellite temporal change inconclusive at current spatial resolution."
+            missing_fields.append("satellite_imagery")
+            signal_details["satellite"] = {
+                "status": "— UNAVAILABLE",
+                "score_contrib": 0.0,
+                "detail": "High-resolution satellite pass unavailable for this coordinate."
+            }
 
-        # Verification Confidence Calculation (0–100)
-        total_confidence = round(agency_score + citizen_score + photo_score + satellite_score, 2)
+        # Normalize score over AVAILABLE SIGNALS ONLY (Fairness Safeguard)
+        total_available_weight = sum(weight for _, weight, _ in available_signals)
+        earned_weight = sum(weight * multiplier for _, weight, multiplier in available_signals)
 
-        # Recommendation Text (Never "fraud")
-        if total_confidence >= 75.0:
-            recommendation = f"Verification Confidence: {total_confidence:.0f}/100 — High multi-signal verification established."
-        elif total_confidence >= 40.0:
-            recommendation = f"Verification Confidence: {total_confidence:.0f}/100 — Moderate verification; routine field inspection recommended."
+        if total_available_weight > 0:
+            final_confidence = round((earned_weight / total_available_weight) * 100.0, 1)
         else:
-            recommendation = f"Verification Confidence: {total_confidence:.0f}/100 — Independent evidence unavailable or inconclusive; physical inspection required."
+            final_confidence = 50.0  # Neutral baseline when zero independent evidence exists
 
         return {
             "project_id": project_id,
-            "verification_confidence": total_confidence,
-            "recommendation": recommendation,
-            "signals": {
-                "agency_claim": {
-                    "status": agency_status,
-                    "score_contrib": agency_score,
-                    "detail": agency_text
-                },
-                "citizen_evidence": {
-                    "status": citizen_status,
-                    "score_contrib": citizen_score,
-                    "detail": citizen_text
-                },
-                "photo_uniqueness": {
-                    "status": photo_status,
-                    "score_contrib": photo_score,
-                    "detail": photo_text
-                },
-                "satellite_signal": {
-                    "status": satellite_status,
-                    "score_contrib": satellite_score,
-                    "detail": satellite_text
-                }
-            }
+            "verification_confidence": final_confidence,
+            "signal_weights": {
+                "earned_weight": earned_weight,
+                "total_available_weight": total_available_weight
+            },
+            "signals": signal_details,
+            "missing_evidence_fields": missing_fields,
+            "fairness_safeguard_note": (
+                f"{len(missing_fields)} evidence sources unavailable. "
+                "Unavailable fields were excluded from denominator and DID NOT penalize confidence score."
+            )
         }
