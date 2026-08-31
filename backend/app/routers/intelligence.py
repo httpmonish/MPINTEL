@@ -17,7 +17,7 @@ from adapters.synthetic_process_data import SyntheticProcessGenerator, SYNTHETIC
 from schemas.pydantic_schemas import CitizenEvidenceSubmission
 from routers.projects import WORK_RECORDS
 
-router = APIRouter(prefix="", tags=["Pratyaksh Ledger & Fairness Intelligence"])
+router = APIRouter(prefix="", tags=["Pratyaksh Unified Intelligence & Polish Layer"])
 
 # Initialize engine singletons
 risk_engine = AIRiskEngine()
@@ -33,13 +33,114 @@ ledger_engine = AuditLedgerEngine()
 # Compute peer benchmarks at router startup
 PEER_BENCHMARKS = peer_engine.compute_peer_benchmarks(WORK_RECORDS)
 
-# Generate synthetic demonstration stores for prototype testing
+# Generate synthetic demonstration stores
 EVIDENCE_STORE = SyntheticEvidenceGenerator.generate_demo_evidence_store(WORK_RECORDS)
 
-# Pre-evaluate top 2,000 records & seed initial audit ledger entries
+# Pre-evaluate top records & seed HERO DEMO PROJECT at index 0
 EVALUATED_CACHE = []
-sample_features = []
 
+# SEED HERO DEMO PROJECT (Phase 6 Step 1)
+HERO_PROJECT = {
+    "work_id": "HERO-MPLADS-2024-001",
+    "work_title": "Construction of Primary Health Center & Allied Solar Facility",
+    "state": "Bihar",
+    "constituency": "ARARIA",
+    "disbursed_amount_inr": 2450000.0,
+    "duration_days": 320.0,
+    "risk_score": 88.5,
+    "anomaly_flag": "POTENTIAL_ANOMALY",
+    "top_contributing_factor": "Cost Anomaly",
+    "component_breakdown": {
+        "cost_anomaly": 100.0,
+        "delay_anomaly": 90.0,
+        "payment_pattern": 85.0,
+        "spatial_signal": 75.0,
+        "evidence_issue": 100.0,
+        "isolation_forest_auxiliary_score": 92.4
+    },
+    "missing_evidence_fields": ["satellite_imagery"],
+    "latitude": 26.1521,
+    "longitude": 87.5181,
+    "has_official_images": True,
+    "has_satellite_data": False,
+    "is_hero_project": True,
+    "stage_history": [
+        {"stage_key": "PROPOSAL_RECOMMENDATION", "stage_name": "Proposal Recommendation", "actual_duration_days": 12.0, "benchmark_days": 15.0, "delay_ratio": 0.8, "responsible_role": "District Nodal Cell", "is_bottleneck": False},
+        {"stage_key": "DISTRICT_REVIEW", "stage_name": "District Review", "actual_duration_days": 90.2, "benchmark_days": 22.0, "delay_ratio": 4.1, "responsible_role": "District Planning Officer (IDA)", "is_bottleneck": True},
+        {"stage_key": "ADMINISTRATIVE_SANCTION", "stage_name": "Administrative Sanction", "actual_duration_days": 28.0, "benchmark_days": 30.0, "delay_ratio": 0.9, "responsible_role": "District Authority Collectorate", "is_bottleneck": False},
+        {"stage_key": "AGENCY_PROCUREMENT", "stage_name": "Agency Procurement", "actual_duration_days": 105.0, "benchmark_days": 45.0, "delay_ratio": 2.3, "responsible_role": "Implementing Agency Procurement", "is_bottleneck": True},
+        {"stage_key": "WORK_EXECUTION", "stage_name": "Work Execution", "actual_duration_days": 85.0, "benchmark_days": 120.0, "delay_ratio": 0.7, "responsible_role": "Contractor Division / IDA", "is_bottleneck": False}
+    ]
+}
+
+EVALUATED_CACHE.append(HERO_PROJECT)
+
+# Seed Hero Evidence Store
+EVIDENCE_STORE.insert(0, {
+    "evidence_id": "ev-hero-001",
+    "project_id": "HERO-MPLADS-2024-001",
+    "evidence_type": "OFFICIAL_COMPLETION_PHOTO",
+    "submitted_by_role": "IMPLEMENTING_AGENCY",
+    "phash_value": "1122334455667788",
+    "latitude": 26.1521,
+    "longitude": 87.5181,
+    "verification_status": "DUPLICATE_SUSPECT",
+    "source": "eSAKSHI Photo Registry",
+    "source_type": "OFFICIAL_PUBLIC",
+    "is_synthetic": True
+})
+
+# Seed Hero Ledger Entries across all 4 decision types
+ledger_engine.record_entry(
+    project_id="HERO-MPLADS-2024-001",
+    decision_type="RISK_ASSESSMENT",
+    computed_score=88.5,
+    component_breakdown=HERO_PROJECT["component_breakdown"],
+    data_sources_used=[
+        {"source_name": "eSAKSHI Official Public Export", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": False},
+        {"source_name": "District Nodal Master Registry", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": False}
+    ],
+    model_version=RISK_ENGINE_VERSION,
+    rules_version=RULES_VERSION,
+    missing_evidence_fields=["satellite_imagery"]
+)
+
+ledger_engine.record_entry(
+    project_id="HERO-MPLADS-2024-001",
+    decision_type="VERIFICATION_TRIANGULATION",
+    computed_score=30.0,
+    component_breakdown={"agency_claim": 25.0, "citizen_evidence": 0.0, "photo_uniqueness": 0.0, "satellite": 0.0},
+    data_sources_used=[
+        {"source_name": "Citizen Mobile PWA Live Upload", "source_type": "CITIZEN_PWA", "is_synthetic": True},
+        {"source_name": "Perceptual Hash Duplicate Index", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": True}
+    ],
+    model_version=TRIANGULATION_ENGINE_VERSION,
+    rules_version=RULES_VERSION,
+    missing_evidence_fields=["satellite_imagery"]
+)
+
+ledger_engine.record_entry(
+    project_id="HERO-MPLADS-2024-001",
+    decision_type="BOTTLENECK_ANALYSIS",
+    computed_score=82.0,
+    component_breakdown={"max_deviation_multiple": 4.1, "primary_bottleneck_stage": "District Review"},
+    data_sources_used=[{"source_name": "District Event Log History", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": True}],
+    model_version=SLA_ANALYZER_VERSION,
+    rules_version=RULES_VERSION
+)
+
+ledger_engine.record_entry(
+    project_id="HERO-MPLADS-2024-001",
+    decision_type="OPTIMIZER_ASSIGNMENT",
+    computed_score=94.2,
+    component_breakdown={"risk_contribution": 35.4, "confidence_gap_contribution": 21.0, "value_contribution": 19.6, "distance_penalty": 2.0},
+    data_sources_used=[{"source_name": "Inspector Capacity Roster", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": True}],
+    model_version=OPTIMIZER_ENGINE_VERSION,
+    rules_version=RULES_VERSION
+)
+
+# Populate evaluated cache with dataset records
+sample_features = []
 for idx, p in enumerate(WORK_RECORDS[:2000]):
     peer_analysis = peer_engine.get_peer_stats(p, PEER_BENCHMARKS)
     risk_res = risk_engine.evaluate_project_risk(p, peer_analysis)
@@ -49,16 +150,12 @@ for idx, p in enumerate(WORK_RECORDS[:2000]):
     risk_res["latitude"] = p.get("latitude", 25.0961)
     risk_res["longitude"] = p.get("longitude", 85.3131)
     
-    # Auto-log Phase 2 Risk Assessment Ledger Entry
     ledger_entry = ledger_engine.record_entry(
         project_id=risk_res["work_id"],
         decision_type="RISK_ASSESSMENT",
         computed_score=risk_res["risk_score"],
         component_breakdown=risk_res["component_breakdown"],
-        data_sources_used=[
-            {"source_name": "eSAKSHI Official Public Export", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": False},
-            {"source_name": "District Nodal Master Registry", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": False}
-        ],
+        data_sources_used=[{"source_name": "eSAKSHI Official Public Export", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": False}],
         model_version=RISK_ENGINE_VERSION,
         rules_version=RULES_VERSION,
         missing_evidence_fields=risk_res.get("missing_evidence_fields", [])
@@ -73,45 +170,36 @@ for idx, p in enumerate(WORK_RECORDS[:2000]):
 if sample_features:
     risk_engine.fit_isolation_forest(np.array(sample_features))
 
-
-# Helper to ensure ledger entry exists for any query
-def ensure_project_ledger_entries(clean_id: str, project_match: Dict[str, Any]):
-    existing = ledger_engine.get_entries_by_project(clean_id)
-    if not existing and project_match:
-        # Seed Risk Ledger
-        ledger_engine.record_entry(
-            project_id=clean_id,
-            decision_type="RISK_ASSESSMENT",
-            computed_score=project_match.get("risk_score", 40.0),
-            component_breakdown=project_match.get("component_breakdown", {}),
-            data_sources_used=[{"source_name": "eSAKSHI Official Public Export", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": False}],
-            model_version=RISK_ENGINE_VERSION,
-            rules_version=RULES_VERSION,
-            missing_evidence_fields=project_match.get("missing_evidence_fields", [])
-        )
-        # Seed Bottleneck Ledger
-        btl_res = sla_engine.analyze_project_bottleneck(clean_id, project_match.get("stage_history", []))
-        ledger_engine.record_entry(
-            project_id=clean_id,
-            decision_type="BOTTLENECK_ANALYSIS",
-            computed_score=btl_res.get("max_deviation_multiple", 1.0) * 20.0,
-            component_breakdown={"max_deviation_multiple": btl_res.get("max_deviation_multiple", 1.0)},
-            data_sources_used=[{"source_name": "District Event Log History", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": True}],
-            model_version=SLA_ANALYZER_VERSION,
-            rules_version=RULES_VERSION
-        )
-
 # -----------------------------------------------------------------------------
-# FEATURE 8: LEDGER REST API ENDPOINTS
+# REST ENDPOINTS
 # -----------------------------------------------------------------------------
 
-@router.get("/ledger/{work_id:path}", summary="Feature 8: GET /ledger/{project_id} - Chronological ledger entries for a project")
+@router.get("/projects/summary", summary="System Overview Summary & Impact Stats")
+def get_system_overview_summary():
+    total_monitored = len(EVALUATED_CACHE)
+    high_risk = len([r for r in EVALUATED_CACHE if r["risk_score"] >= 70.0])
+    review_req = len([r for r in EVALUATED_CACHE if 40.0 <= r["risk_score"] < 70.0])
+    normal = len([r for r in EVALUATED_CACHE if r["risk_score"] < 40.0])
+
+    return {
+        "total_projects_monitored": total_monitored,
+        "risk_distribution": {
+            "high_risk_count": high_risk,
+            "review_required_count": review_req,
+            "normal_count": normal
+        },
+        "hero_project_id": "HERO-MPLADS-2024-001",
+        "provenance_summary": {
+            "data_sources": ["eSAKSHI Official Public Export", "data.gov.in MPLADS Registry"],
+            "total_records_indexed": 30002,
+            "retrieved_at": "2026-08-31T00:00:00Z"
+        }
+    }
+
+
+@router.get("/ledger/{work_id:path}", summary="Feature 8: GET /ledger/{project_id}")
 def get_project_ledger_history(work_id: str):
     clean_id = work_id.strip('/')
-    match = next((r for r in EVALUATED_CACHE if r["work_id"].lower().strip('/') == clean_id.lower()), None)
-    if match:
-        ensure_project_ledger_entries(clean_id, match)
-
     entries = ledger_engine.get_entries_by_project(clean_id)
     return {
         "project_id": clean_id,
@@ -120,7 +208,7 @@ def get_project_ledger_history(work_id: str):
     }
 
 
-@router.get("/ledger/entry/{entry_id}", summary="Feature 8: GET /ledger/entry/{entry_id} - Full detail for a single ledger entry")
+@router.get("/ledger/entry/{entry_id}", summary="Feature 8: GET /ledger/entry/{entry_id}")
 def get_single_ledger_entry(entry_id: str):
     entry = ledger_engine.get_entry_by_id(entry_id)
     if not entry:
@@ -128,7 +216,7 @@ def get_single_ledger_entry(entry_id: str):
     return entry
 
 
-@router.post("/ledger/entry/{entry_id}/decision", summary="Feature 8: POST /ledger/entry/{entry_id}/decision - Officer action feedback")
+@router.post("/ledger/entry/{entry_id}/decision", summary="Feature 8: POST /ledger/entry/{entry_id}/decision")
 def record_officer_human_decision(
     entry_id: str,
     human_decision: str = Body(..., embed=True),
@@ -139,38 +227,22 @@ def record_officer_human_decision(
         raise HTTPException(status_code=404, detail=f"Ledger entry '{entry_id}' not found.")
     return {"status": "SUCCESS", "updated_entry": updated}
 
-# -----------------------------------------------------------------------------
-# FEATURE 9: FAIRNESS TEST SUMMARY REST API ENDPOINT
-# -----------------------------------------------------------------------------
 
-@router.get("/fairness/test-summary", summary="Feature 9: GET /fairness/test-summary - Remote cohort fairness validation test")
+@router.get("/fairness/test-summary", summary="Feature 9: GET /fairness/test-summary")
 def get_fairness_test_summary():
     from tests.fairness_test import run_fairness_validation
-    res = run_fairness_validation()
-    return res
+    return run_fairness_validation()
 
-# -----------------------------------------------------------------------------
-# PHASE 2 & 3 ENDPOINTS (WITH LEDGER ENTRY ID AUTO-POPULATION)
-# -----------------------------------------------------------------------------
 
 @router.get("/risk/{work_id:path}", summary="GET /risk/{project_id}")
 def get_project_risk_detail(work_id: str):
     clean_id = work_id.strip('/')
     match = next((r for r in EVALUATED_CACHE if r["work_id"].lower().strip('/') == clean_id.lower()), None)
     if not match:
-        project = next((w for w in WORK_RECORDS if clean_id.lower() in w["work_id"].lower()), None)
-        if project:
-            peer_analysis = peer_engine.get_peer_stats(project, PEER_BENCHMARKS)
-            match = risk_engine.evaluate_project_risk(project, peer_analysis)
-            match["stage_history"] = SyntheticProcessGenerator.generate_project_stage_history(project, 0)
-            
-    if not match:
         raise HTTPException(status_code=404, detail=f"Project with work_id '{work_id}' not found.")
 
-    ensure_project_ledger_entries(clean_id, match)
-
     orig_proj = next((w for w in WORK_RECORDS if w["work_id"] == match["work_id"]), {})
-    peer_analysis = peer_engine.get_peer_stats(orig_proj, PEER_BENCHMARKS)
+    peer_analysis = peer_engine.get_peer_stats(orig_proj if orig_proj else match, PEER_BENCHMARKS)
     ledger_entries = ledger_engine.get_entries_by_project(clean_id)
 
     return {
@@ -181,7 +253,7 @@ def get_project_risk_detail(work_id: str):
             "constituency": match.get("constituency"),
             "disbursed_amount_inr": match.get("disbursed_amount_inr"),
             "current_stage": orig_proj.get("current_stage", "COMPLETION_REPORTED"),
-            "has_official_images": orig_proj.get("has_official_images", False)
+            "has_official_images": match.get("has_official_images", False)
         },
         "risk_assessment": match,
         "peer_group_summary": peer_analysis,
@@ -189,7 +261,7 @@ def get_project_risk_detail(work_id: str):
     }
 
 
-@router.get("/risk", summary="GET /risk - Paginated, sortable, filterable project list")
+@router.get("/risk", summary="GET /risk")
 def list_projects_risk(
     state: Optional[str] = None,
     work_category: Optional[str] = None,
@@ -237,8 +309,23 @@ def list_projects_risk(
 @router.get("/verification/confidence/{work_id:path}", summary="GET /verification/confidence/{project_id}")
 def get_verification_confidence(work_id: str):
     clean_id = work_id.strip('/')
-    project = next((w for w in WORK_RECORDS if w["work_id"].lower().strip('/') == clean_id.lower()), None)
     
+    if clean_id == "HERO-MPLADS-2024-001":
+        return {
+            "project_id": "HERO-MPLADS-2024-001",
+            "verification_confidence": 30.0,
+            "signal_weights": {"earned_weight": 25.0, "total_available_weight": 85.0},
+            "signals": {
+                "agency_claim": {"status": "✅ SUPPORTS_CLAIM", "score_contrib": 25.0, "detail": "Official agency progress report submitted."},
+                "citizen_evidence": {"status": "❌ CONTRADICTS_CLAIM", "score_contrib": 0.0, "detail": "Citizen live capture location discrepancy (1,420m away from site)."},
+                "photo_uniqueness": {"status": "❌ CONTRADICTS_CLAIM", "score_contrib": 0.0, "detail": "Duplicate image detected! Matches WS/MP418/2024-2025/9988 (98.5% similarity)."},
+                "satellite": {"status": "— UNAVAILABLE", "score_contrib": 0.0, "detail": "Sentinel-2 remote sensing image pass unavailable."}
+            },
+            "missing_evidence_fields": ["satellite_imagery"],
+            "fairness_safeguard_note": "1 evidence source unavailable. Excluded from denominator and DID NOT penalize confidence score."
+        }
+
+    project = next((w for w in WORK_RECORDS if w["work_id"].lower().strip('/') == clean_id.lower()), None)
     target_ev = next((e for e in EVIDENCE_STORE if e["project_id"].lower().strip('/') == clean_id.lower()), None)
     target_phash = target_ev.get("phash_value") if target_ev else None
     
@@ -268,27 +355,19 @@ def get_verification_confidence(work_id: str):
         photo_similarity=photo_sim,
         satellite_data=None
     )
-
-    # Auto-log Phase 3 Verification Ledger Entry
-    ledger_entry = ledger_engine.record_entry(
-        project_id=clean_id,
-        decision_type="VERIFICATION_TRIANGULATION",
-        computed_score=conf_res["verification_confidence"],
-        component_breakdown=conf_res["signal_weights"],
-        data_sources_used=[
-            {"source_name": "Citizen Mobile PWA Live Upload", "source_type": "CITIZEN_PWA", "is_synthetic": False},
-            {"source_name": "eSAKSHI Photo Registry", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": True}
-        ],
-        model_version=TRIANGULATION_ENGINE_VERSION,
-        rules_version=RULES_VERSION,
-        missing_evidence_fields=conf_res.get("missing_evidence_fields", [])
-    )
-    conf_res["ledger_entry_id"] = ledger_entry["entry_id"]
-
     return conf_res
 
 
-@router.get("/bottleneck/{work_id:path}", summary="Feature 6: GET /bottleneck/{project_id} - Project SLA delays")
+@router.get("/bottleneck/summary", summary="Feature 6: GET /bottleneck/summary")
+def get_bottleneck_summary():
+    all_analyses = [
+        sla_engine.analyze_project_bottleneck(p["work_id"], p.get("stage_history", []))
+        for p in EVALUATED_CACHE[:200]
+    ]
+    return sla_engine.compute_system_bottleneck_summary(all_analyses)
+
+
+@router.get("/bottleneck/{work_id:path}", summary="Feature 6: GET /bottleneck/{project_id}")
 def get_project_bottleneck_detail(work_id: str):
     clean_id = work_id.strip('/')
     match = next((r for r in EVALUATED_CACHE if r["work_id"].lower().strip('/') == clean_id.lower()), None)
@@ -297,24 +376,10 @@ def get_project_bottleneck_detail(work_id: str):
         match = {"work_id": clean_id, "stage_history": SyntheticProcessGenerator.generate_project_stage_history({"work_id": clean_id}, 0)}
 
     stage_hist = match.get("stage_history", [])
-    bottleneck_res = sla_engine.analyze_project_bottleneck(clean_id, stage_hist)
-
-    # Auto-log Phase 4 Bottleneck Ledger Entry
-    ledger_entry = ledger_engine.record_entry(
-        project_id=clean_id,
-        decision_type="BOTTLENECK_ANALYSIS",
-        computed_score=bottleneck_res.get("max_deviation_multiple", 1.0) * 20.0,
-        component_breakdown={"max_deviation_multiple": bottleneck_res.get("max_deviation_multiple", 1.0)},
-        data_sources_used=[{"source_name": "District Event Log History", "source_type": "OFFICIAL_PUBLIC", "is_synthetic": True}],
-        model_version=SLA_ANALYZER_VERSION,
-        rules_version=RULES_VERSION
-    )
-    bottleneck_res["ledger_entry_id"] = ledger_entry["entry_id"]
-
-    return bottleneck_res
+    return sla_engine.analyze_project_bottleneck(clean_id, stage_hist)
 
 
-@router.get("/optimizer/plan", summary="Feature 7: GET /optimizer/plan - Full inspection plan across all inspectors")
+@router.get("/optimizer/plan", summary="Feature 7: GET /optimizer/plan")
 def get_full_inspection_plan():
     routes = []
     for insp in SYNTHETIC_INSPECTORS:
