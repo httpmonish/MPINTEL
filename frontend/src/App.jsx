@@ -23,7 +23,10 @@ import {
   Sparkles,
   BarChart3,
   Activity,
-  ArrowUpRight
+  ArrowUpRight,
+  QrCode,
+  Smartphone,
+  ExternalLink
 } from 'lucide-react';
 
 import L from 'leaflet';
@@ -61,6 +64,9 @@ export default function App() {
   const [decisionSubmitting, setDecisionSubmitting] = useState(false);
   const [fairnessTestResult, setFairnessTestResult] = useState(null);
 
+  // Phase 7 QR Code Modal State
+  const [showQRModal, setShowQRModal] = useState(false);
+
   // Citizen PWA Form State
   const [pwaLat, setPwaLat] = useState('26.1521');
   const [pwaLon, setPwaLon] = useState('87.5181');
@@ -71,6 +77,8 @@ export default function App() {
   // Leaflet Map Ref
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
+
+  const currentHostUrl = typeof window !== 'undefined' ? window.location.href : 'https://pratyaksh-mplads.vercel.app';
 
   useEffect(() => {
     fetchSystemOverview();
@@ -373,35 +381,46 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              Pratyaksh <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">SIH 2026 Unified Platform</span>
+              Pratyaksh <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">SIH 2026 Production</span>
             </h1>
-            <p className="text-xs text-slate-400">AI-Powered MPLADS Monitoring, Independent Verification & Route Optimizer Layer</p>
+            <p className="text-xs text-slate-400">AI-Powered MPLADS Monitoring, Verification & Route Optimizer</p>
           </div>
         </div>
 
-        {/* 3-Tab Switcher (Overview, Risk Matrix, Inspection Planner) */}
-        <div className="flex items-center bg-slate-950/80 p-1 rounded-xl border border-slate-800">
-          <button 
-            onClick={() => setActiveTab('overview')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${activeTab === 'overview' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+        {/* 3-Tab Switcher + QR Access Button */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowQRModal(true)}
+            className="px-3 py-1.5 rounded-xl bg-indigo-950/60 border border-indigo-700/50 hover:bg-indigo-900/60 text-indigo-300 text-xs font-bold flex items-center gap-1.5 transition"
+            title="Scan QR Code on Mobile Phone"
           >
-            <Activity className="w-3.5 h-3.5" />
-            Impact Overview
+            <QrCode className="w-4 h-4 text-indigo-400" />
+            Judge Mobile Scan QR
           </button>
-          <button 
-            onClick={() => setActiveTab('risk')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${activeTab === 'risk' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
-          >
-            <ShieldAlert className="w-3.5 h-3.5" />
-            Risk & Verification Matrix
-          </button>
-          <button 
-            onClick={() => setActiveTab('planner')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${activeTab === 'planner' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
-          >
-            <Navigation className="w-3.5 h-3.5" />
-            Inspection Planner & Map
-          </button>
+
+          <div className="flex items-center bg-slate-950/80 p-1 rounded-xl border border-slate-800">
+            <button 
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${activeTab === 'overview' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              <Activity className="w-3.5 h-3.5" />
+              Impact Overview
+            </button>
+            <button 
+              onClick={() => setActiveTab('risk')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${activeTab === 'risk' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Risk & Verification Matrix
+            </button>
+            <button 
+              onClick={() => setActiveTab('planner')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${activeTab === 'planner' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              <Navigation className="w-3.5 h-3.5" />
+              Inspection Planner & Map
+            </button>
+          </div>
         </div>
       </header>
 
@@ -459,7 +478,7 @@ export default function App() {
 
           </div>
 
-          {/* HERO DEMO PROJECT SPOTLIGHT CARD (PHASE 6 FEATURE) */}
+          {/* HERO DEMO PROJECT SPOTLIGHT CARD */}
           {heroProject && (
             <div className="bg-gradient-to-r from-indigo-950/60 via-slate-900 to-rose-950/50 border border-indigo-500/40 rounded-2xl p-6 shadow-2xl space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-indigo-500/30 pb-4">
@@ -510,10 +529,9 @@ export default function App() {
             </div>
           )}
 
-          {/* 2 PREVIEW CARDS (BOTTLENECK SUMMARY + OPTIMIZER PREVIEW) */}
+          {/* 2 PREVIEW CARDS */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
-            {/* System Bottleneck Preview */}
             <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 space-y-3 shadow-xl">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -544,7 +562,6 @@ export default function App() {
               )}
             </div>
 
-            {/* Optimizer Inspection Plan Preview */}
             <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 space-y-3 shadow-xl">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -1008,6 +1025,61 @@ export default function App() {
                 )}
               </div>
 
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PHASE 7: JUDGE MOBILE SCAN QR CODE ACCESS MODAL */}
+      {showQRModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl p-6 space-y-5 shadow-2xl text-xs">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-indigo-400" />
+                <h3 className="text-base font-bold text-white">Judge Live Mobile Test QR Codes</h3>
+              </div>
+              <button onClick={() => setShowQRModal(false)} className="p-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-slate-300">
+              Scan either QR code with your mobile smartphone camera to open the live deployed HTTPS application or test citizen live camera/GPS submission.
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 text-center">
+              
+              {/* QR Code 1: Authority Dashboard */}
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 flex flex-col items-center">
+                <span className="font-bold text-slate-200 flex items-center gap-1 text-[11px]">
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" /> Authority Dashboard
+                </span>
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentHostUrl)}`}
+                  alt="Authority Dashboard QR Code"
+                  className="w-32 h-32 rounded-lg border border-slate-700 bg-white p-1"
+                />
+                <span className="text-[10px] text-slate-500 font-mono truncate max-w-[140px]">{currentHostUrl}</span>
+              </div>
+
+              {/* QR Code 2: Citizen Mobile PWA Live Capture */}
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 flex flex-col items-center">
+                <span className="font-bold text-slate-200 flex items-center gap-1 text-[11px]">
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-400" /> Citizen PWA Capture
+                </span>
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentHostUrl + '?flow=pwa')}`}
+                  alt="Citizen PWA QR Code"
+                  className="w-32 h-32 rounded-lg border border-slate-700 bg-white p-1"
+                />
+                <span className="text-[10px] text-emerald-400 font-mono font-bold">HTTPS Camera & GPS</span>
+              </div>
+
+            </div>
+
+            <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-800/40 text-[11px] text-indigo-300">
+              Note: Live HTTPS URL enforces native browser permissions for HTML5 Geolocation and camera video streams.
             </div>
           </div>
         </div>

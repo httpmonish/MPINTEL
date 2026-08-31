@@ -1,49 +1,49 @@
 import sys
 import os
 
-# Ensure app and backend directories are in PYTHONPATH
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Ensure backend directory is in sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from config import settings
 from routers import projects, intelligence
+from config import config
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description=(
-        "Pratyaksh — AI-Powered MPLADS Monitoring & Verification Intelligence Layer. "
-        "Operates on top of eSAKSHI to detect, verify, explain, prioritize, act, and learn. "
-        "Maintains strict vocabulary boundaries (Risk Score != Verification Confidence; Anomaly != Fraud)."
-    )
+    title=config.PROJECT_NAME,
+    version=config.VERSION,
+    description="Pratyaksh — AI-Powered MPLADS Monitoring Intelligence Layer ON TOP of eSAKSHI",
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
-# Configure CORS
+# Configure Production CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=config.CORS_ORIGINS if config.CORS_ORIGINS != ["*"] else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(projects.router, prefix=settings.API_V1_STR)
-app.include_router(intelligence.router, prefix=settings.API_V1_STR)
+app.include_router(projects.router, prefix="/api/v1")
+app.include_router(intelligence.router, prefix="/api/v1")
 
-
-@app.get("/", tags=["Health Check"])
-def root_health_check():
+@app.get("/")
+def root():
     return {
-        "status": "HEALTHY",
-        "service": settings.PROJECT_NAME,
-        "version": settings.VERSION,
-        "docs_url": "/docs",
-        "pipeline": "DETECT -> VERIFY -> EXPLAIN -> PRIORITIZE -> ACT -> LEARN"
+        "status": "ONLINE",
+        "system": "Pratyaksh AI-Powered MPLADS Monitoring",
+        "positioning": "Intelligence + Independent Verification Layer ON TOP of eSAKSHI",
+        "version": config.VERSION,
+        "docs": "/docs"
     }
 
+@app.get("/health")
+@app.get("/api/v1/ping")
+def health_ping():
+    """Health check ping endpoint preventing Render free-tier cold starts."""
+    return {"status": "HEALTHY", "ping": "PONG", "environment": config.ENVIRONMENT}
 
 if __name__ == "__main__":
     import uvicorn
