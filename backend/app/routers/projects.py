@@ -15,7 +15,7 @@ WORK_RECORDS = adapter.parse_works_completed()
 EXPENDITURE_RECORDS = adapter.parse_expenditures()
 
 
-@router.get("/summary", summary="Get overall MPLADS dataset statistics")
+@router.get("/dataset-summary", summary="Get overall MPLADS dataset statistics")
 def get_dataset_summary():
     total_sanctioned = sum(w.get("sanctioned_amount_inr", 0) for w in WORK_RECORDS)
     total_disbursed = sum(e.get("fund_disbursed_amount_inr", 0) for e in EXPENDITURE_RECORDS)

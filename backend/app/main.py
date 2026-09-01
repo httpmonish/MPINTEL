@@ -1,8 +1,13 @@
 import sys
 import os
 
-# Ensure backend directory is in sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Ensure both app directory and backend directory are in sys.path
+app_dir = os.path.abspath(os.path.dirname(__file__))
+backend_dir = os.path.abspath(os.path.join(app_dir, '..'))
+if app_dir not in sys.path:
+    sys.path.insert(0, app_dir)
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,8 +31,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(projects.router, prefix="/api/v1")
 app.include_router(intelligence.router, prefix="/api/v1")
+app.include_router(projects.router, prefix="/api/v1")
 
 @app.get("/")
 def root():
