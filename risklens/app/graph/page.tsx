@@ -14,15 +14,16 @@ export default function NetworkGraphPage() {
   return (
     <DashboardShell>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            <span className="civic-eyebrow">GRAPH INTELLIGENCE & SYNDICATE DETECTION</span>
+            <div className="flex items-center gap-2 mt-1">
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display">
                 Multi-Entity Risk & Procurement Syndicate Network
               </h1>
               <DataSourceBadge type="synthetic" />
             </div>
-            <p className="text-sm text-slate-500">
+            <p className="text-xs sm:text-sm text-slate-500 mt-1.5 font-primary">
               Graph intelligence mapping cross-project relationships between MPs, constituencies, implementing agencies, and contractors to surface multi-project patterns invisible in single-case views.
             </p>
           </div>

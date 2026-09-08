@@ -38,22 +38,23 @@ export default function InvestigationQueuePage() {
     <DashboardShell>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            <span className="civic-eyebrow">EXPLAINABLE RISK INTELLIGENCE & AUDIT DISPATCH</span>
+            <div className="flex items-center gap-2 mt-1">
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display">
                 Investigation & Verification Queue
               </h1>
               <DataSourceBadge type="synthetic" />
             </div>
-            <p className="text-sm text-slate-500">
-              Active projects flagged by the Explainable Risk Fusion Engine awaiting field inspection or officer verification.
+            <p className="text-xs sm:text-sm text-slate-500 mt-1.5 font-primary">
+              Active projects flagged by the Multi-Signal Fusion Engine awaiting field physical inspection or officer verification.
             </p>
           </div>
 
           <Link
             href="/investigation/HERO-MPLADS-001"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors shrink-0"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors shrink-0 font-primary"
           >
             <span>Launch Hero Spotlight</span>
             <ArrowRight className="w-3.5 h-3.5 text-blue-400" />

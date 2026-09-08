@@ -27,15 +27,16 @@ export default function EquityRadarPage() {
   return (
     <DashboardShell>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            <span className="civic-eyebrow">EQUITY & GEOGRAPHIC FAIRNESS RADAR</span>
+            <div className="flex items-center gap-2 mt-1">
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display">
                 Civic Equity & Neglected Constituency Radar
               </h1>
               <DataSourceBadge type="synthetic" />
             </div>
-            <p className="text-sm text-slate-500">
+            <p className="text-xs sm:text-sm text-slate-500 mt-1.5 font-primary">
               The pro-fairness counterpart to risk detection: Identifies chronic fund under-utilization, delayed sanctioning velocity, and physical inspection deficits across parliamentary constituencies.
             </p>
           </div>

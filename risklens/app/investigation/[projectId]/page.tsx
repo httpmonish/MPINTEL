@@ -39,7 +39,11 @@ export default function InvestigationDetailPage() {
   const [officerNotes, setOfficerNotes] = useState("");
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
 
-  const project = projects.find((p) => p.id.toLowerCase() === projectId.toLowerCase());
+  const project =
+    projects.find((p) => p.id.toLowerCase() === projectId.toLowerCase()) ||
+    (projectId.toLowerCase().includes("prj-2024-003") || projectId.toLowerCase().includes("hero")
+      ? projects.find((p) => p.id === "HERO-MPLADS-001")
+      : undefined);
   const refDuplicateProject = projects.find((p) => p.id === "PRJ-2023-088");
 
   if (!project) {

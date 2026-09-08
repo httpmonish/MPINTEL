@@ -1,357 +1,583 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import { useRiskLensStore } from "@/lib/store";
+import { formatINR } from "@/lib/utils";
+import { DashboardShell } from "@/components/layout/DashboardShell";
+import { FundUtilizationGauge } from "@/components/charts/FundUtilizationGauge";
+import { SectorBreakdown } from "@/components/charts/SectorBreakdown";
+import { ConstituencyCard } from "@/components/cards/ConstituencyCard";
 import { DataSourceBadge } from "@/components/cards/DataSourceBadge";
-import { RiskGauge } from "@/components/charts/RiskGauge";
 import {
   ShieldAlert,
   ArrowRight,
   Sparkles,
-  Layers,
-  Coins,
-  Clock,
-  ImageIcon,
-  CheckCircle2,
-  FileSearch,
+  TrendingUp,
+  FileCheck,
+  AlertTriangle,
+  MapPin,
+  Building,
+  Users,
+  Search,
   ExternalLink,
-  Award,
-  BarChart3,
-  Compass,
+  ChevronRight,
+  GitCompare,
+  CheckCircle2,
+  PieChart,
 } from "lucide-react";
 
-export default function LandingPage() {
-  const sampleRiskScore = {
-    compositeScore: 84,
-    tier: "high" as const,
-    whyFlaggedSummary:
-      "Flagged for verification due to: Peer Cost Outlier (+25), Stage SLA Bottleneck (+18), Duplicate Evidence (+20), Disbursement Compliance (+12).",
-    breakdown: [
-      {
-        signal: "cost_anomaly" as const,
-        label: "Peer Cost Outlier",
-        points: 25,
-        maxPoints: 25,
-        reason: "Cost (₹92.0L) exceeds peer cohort normal range (₹5.0L–₹10.0L) by 1127%.",
-        isTriggered: true,
-      },
-      {
-        signal: "sla_delay" as const,
-        label: "Stage SLA Bottleneck",
-        points: 18,
-        maxPoints: 20,
-        reason: "Technical Sanction stage delayed 4.1× normative statutory timeline.",
-        isTriggered: true,
-      },
-      {
-        signal: "photo_similarity" as const,
-        label: "Duplicate Evidence (pHash)",
-        points: 20,
-        maxPoints: 20,
-        reason: "Site photo exhibits 97% perceptual visual fingerprint match with prior project.",
-        isTriggered: true,
-      },
-      {
-        signal: "payment_anomaly" as const,
-        label: "Disbursement & UC Compliance",
-        points: 12,
-        maxPoints: 15,
-        reason: "Tranche #2 released without mandatory prior Utilization Certificate (UC).",
-        isTriggered: true,
-      },
-      {
-        signal: "gis_similarity" as const,
-        label: "GIS Spatial Overlap",
-        points: 0,
-        maxPoints: 16,
-        reason: "Coordinates within standard geographic dispersion norms.",
-        isTriggered: false,
-      },
-    ],
-    calculatedAt: new Date().toISOString(),
-    algorithmVersion: "RiskLens-v2.1",
-  };
+// State-wise data matching Empowered Indian's national dataset
+interface StatePerformance {
+  code: string;
+  name: string;
+  mps: number;
+  sanctionedCr: number;
+  expenditureCr: number;
+  utilization: number;
+  completedWorks: number;
+  flaggedWorks: number;
+}
+
+const STATES_DATA: StatePerformance[] = [
+  {
+    code: "MH",
+    name: "Maharashtra",
+    mps: 48,
+    sanctionedCr: 2140.0,
+    expenditureCr: 1887.4,
+    utilization: 88.2,
+    completedWorks: 492,
+    flaggedWorks: 1,
+  },
+  {
+    code: "GJ",
+    name: "Gujarat",
+    mps: 26,
+    sanctionedCr: 1280.0,
+    expenditureCr: 1105.9,
+    utilization: 86.4,
+    completedWorks: 318,
+    flaggedWorks: 0,
+  },
+  {
+    code: "KA",
+    name: "Karnataka",
+    mps: 28,
+    sanctionedCr: 1360.0,
+    expenditureCr: 1116.5,
+    utilization: 82.1,
+    completedWorks: 342,
+    flaggedWorks: 2,
+  },
+  {
+    code: "TN",
+    name: "Tamil Nadu",
+    mps: 39,
+    sanctionedCr: 1820.0,
+    expenditureCr: 1465.1,
+    utilization: 80.5,
+    completedWorks: 430,
+    flaggedWorks: 1,
+  },
+  {
+    code: "RJ",
+    name: "Rajasthan",
+    mps: 25,
+    sanctionedCr: 1210.0,
+    expenditureCr: 941.3,
+    utilization: 77.8,
+    completedWorks: 285,
+    flaggedWorks: 2,
+  },
+  {
+    code: "UP",
+    name: "Uttar Pradesh",
+    mps: 80,
+    sanctionedCr: 3890.0,
+    expenditureCr: 2886.3,
+    utilization: 74.2,
+    completedWorks: 840,
+    flaggedWorks: 6,
+  },
+  {
+    code: "WB",
+    name: "West Bengal",
+    mps: 42,
+    sanctionedCr: 2010.0,
+    expenditureCr: 1433.1,
+    utilization: 71.3,
+    completedWorks: 410,
+    flaggedWorks: 3,
+  },
+  {
+    code: "BR",
+    name: "Bihar",
+    mps: 40,
+    sanctionedCr: 1950.0,
+    expenditureCr: 1333.8,
+    utilization: 68.4,
+    completedWorks: 380,
+    flaggedWorks: 5,
+  },
+];
+
+export default function EmpoweredIndianMPLADSPage() {
+  const { constituencies, projects } = useRiskLensStore();
+  const [selectedTerm, setSelectedTerm] = useState<"18th" | "17th" | "rajya_sabha">("18th");
+  const [searchFilter, setSearchFilter] = useState("");
+  const [stateSortKey, setStateSortKey] = useState<"utilization" | "sanctionedCr" | "flaggedWorks">("utilization");
+  const [selectedSector, setSelectedSector] = useState<string | null>(null);
+
+  // Term data adjustments
+  const termStats = {
+    "18th": {
+      sanctioned: 19820,
+      expenditure: 15240,
+      utilization: 76.9,
+      completed: 3240,
+      totalWorks: 4120,
+      flagged: 18,
+      termTitle: "18th Lok Sabha (2024–2029)",
+    },
+    "17th": {
+      sanctioned: 24750,
+      expenditure: 21890,
+      utilization: 88.4,
+      completed: 7920,
+      totalWorks: 8450,
+      flagged: 8,
+      termTitle: "17th Lok Sabha (2019–2024)",
+    },
+    rajya_sabha: {
+      sanctioned: 11400,
+      expenditure: 8780,
+      utilization: 77.0,
+      completed: 1890,
+      totalWorks: 2340,
+      flagged: 6,
+      termTitle: "Rajya Sabha (Nominated & State Representatives)",
+    },
+  }[selectedTerm];
+
+  // Sort states
+  const sortedStates = [...STATES_DATA].sort((a, b) => {
+    if (stateSortKey === "utilization") return b.utilization - a.utilization;
+    if (stateSortKey === "sanctionedCr") return b.sanctionedCr - a.sanctionedCr;
+    return b.flaggedWorks - a.flaggedWorks;
+  });
+
+  // Filter constituencies
+  const filteredConstituencies = constituencies.filter((c) =>
+    c.id.toLowerCase().includes(searchFilter.toLowerCase()) ||
+    c.stateCode.toLowerCase().includes(searchFilter.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-      {/* Public Navigation Header */}
-      <header className="h-16 bg-white border-b border-slate-200/80 px-6 lg:px-12 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-sm">
-            <ShieldAlert className="w-5 h-5 text-blue-400" />
-          </div>
-          <div>
-            <span className="font-bold text-base tracking-tight text-slate-900">
-              RiskLens
+    <DashboardShell>
+      <div className="space-y-10">
+        {/* Hero Section with Cormorant Garamond Display Font & Civic Eyebrow */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-10 shadow-xs relative overflow-hidden">
+          <div className="max-w-3xl space-y-4">
+            <span className="civic-eyebrow">
+              GOVERNMENT TRANSPARENCY PLATFORM • MPLADS DASHBOARD
             </span>
-            <span className="text-[11px] text-slate-500 font-medium ml-1.5 hidden sm:inline">
-              for MPLADS
-            </span>
+
+            <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight font-display leading-[1.08]">
+              Empowered Indian: Member of Parliament Local Area Development Scheme
+            </h1>
+
+            <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-primary">
+              Public audit, tracking, and explainable AI risk intelligence across all 543 Lok Sabha constituencies. Track real-time fund allocations, completed civic assets, and AI-flagged accountability notices.
+            </p>
+
+            {/* Interactive Term Toggle */}
+            <div className="pt-2 flex flex-wrap items-center gap-2 font-primary">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-2">
+                Parliament Term:
+              </span>
+              <button
+                onClick={() => setSelectedTerm("18th")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  selectedTerm === "18th"
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                18th Lok Sabha (2024–29)
+              </button>
+              <button
+                onClick={() => setSelectedTerm("17th")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  selectedTerm === "17th"
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                17th Lok Sabha (2019–24)
+              </button>
+              <button
+                onClick={() => setSelectedTerm("rajya_sabha")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  selectedTerm === "rajya_sabha"
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                Rajya Sabha
+              </button>
+            </div>
           </div>
-        </div>
 
-        <nav className="flex items-center gap-6 text-xs font-semibold text-slate-600">
-          <Link href="/how-it-works" className="hover:text-slate-900 transition-colors">
-            How Scoring Works
-          </Link>
-          <Link href="/offline" className="hover:text-slate-900 transition-colors">
-            Offline Demo
-          </Link>
-          <Link
-            href="/district"
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-xs transition-colors flex items-center gap-1.5"
-          >
-            <span>Launch Dashboard</span>
-            <ArrowRight className="w-3.5 h-3.5 text-blue-400" />
-          </Link>
-        </nav>
-      </header>
-
-      {/* Hero Section */}
-      <section className="py-16 md:py-24 px-6 lg:px-12 max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12">
-        <div className="space-y-6 flex-1 text-center lg:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200/80">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            Official SIH 2026 Submission
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
-            From Status Monitoring to{" "}
-            <span className="text-blue-600">Explainable Risk Intelligence</span>
-          </h1>
-
-          <p className="text-base text-slate-600 leading-relaxed max-w-xl mx-auto lg:mx-0">
-            Operating as an intelligence layer on top of the government&apos;s eSAKSHI system. Detects SLA delays, peer cost outliers, and duplicate completion evidence with complete mathematical explainability.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 pt-2">
-            <Link
-              href="/district"
-              className="w-full sm:w-auto px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2"
-            >
-              <span>View Live Prototype</span>
-              <ArrowRight className="w-4 h-4 text-blue-400" />
-            </Link>
+          <div className="mt-8 pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 text-xs font-primary">
+            <div className="flex items-center gap-4 text-slate-500">
+              <DataSourceBadge type="synthetic" />
+              <span>• Synthetic Demonstration Layer</span>
+              <span>• MoSPI Compliant (2023 Guidelines)</span>
+            </div>
             <Link
               href="/how-it-works"
-              className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl shadow-2xs transition-colors flex items-center justify-center"
+              className="text-blue-600 hover:text-blue-800 font-bold inline-flex items-center gap-1"
             >
-              How Scoring Works
+              <span>Learn how RiskLens calculates risk scores</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
-          </div>
-
-          <div className="pt-4 flex items-center justify-center lg:justify-start gap-4 text-xs text-slate-500">
-            <DataSourceBadge type="synthetic" />
-            <span>• Zero Real Personal Names</span>
-            <span>• Human-in-the-Loop</span>
           </div>
         </div>
 
-        {/* Hero Visual: Interactive Telemetry Risk Gauge Card */}
-        <div className="shrink-0 w-full max-w-md bg-white rounded-3xl p-6 border border-slate-200/90 shadow-xl space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-900 text-white">
-                HERO-MPLADS-001
-              </span>
-              <span className="text-xs font-semibold text-slate-500">
-                Solar High-Mast Grid
-              </span>
+        {/* National Metrics & Interactive Utilization Gauge */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <span className="civic-eyebrow">National Performance Summary</span>
+              <h2 className="text-2xl font-bold text-slate-900 font-display">
+                {termStats.termTitle}
+              </h2>
             </div>
-            <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">
-              High Risk
-            </span>
+            <Link
+              href="/states"
+              className="text-xs font-bold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 font-primary"
+            >
+              <span>View all 28 States & UTs</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
-          <div className="py-2 flex flex-col items-center">
-            <RiskGauge riskScore={sampleRiskScore} size="lg" />
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
-            <div className="font-semibold text-slate-700 mb-1">
-              Live Signal Attribution:
-            </div>
-            {sampleRiskScore.breakdown.slice(0, 3).map((b) => (
-              <div
-                key={b.signal}
-                className="flex items-center justify-between p-2 rounded-lg bg-slate-50 text-[11px]"
-              >
-                <span className="text-slate-700 font-medium">{b.label}</span>
-                <span className="font-bold text-red-600">+{b.points} pts</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Metric 1: Total Sanctioned */}
+            <div className="civic-card p-5">
+              <div className="flex items-center justify-between text-slate-400 mb-2 font-primary">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Total Sanctioned
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
               </div>
+              <div className="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">
+                ₹{termStats.sanctioned.toLocaleString()} Cr
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1 font-primary">
+                {termStats.totalWorks.toLocaleString()} developmental works approved
+              </p>
+            </div>
+
+            {/* Metric 2: Expenditure Released */}
+            <div className="civic-card p-5">
+              <div className="flex items-center justify-between text-slate-400 mb-2 font-primary">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Expenditure Released
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <FileCheck className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">
+                ₹{termStats.expenditure.toLocaleString()} Cr
+              </div>
+              <p className="text-[11px] text-emerald-600 font-semibold mt-1 font-primary flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>{termStats.utilization}% overall disbursement rate</span>
+              </p>
+            </div>
+
+            {/* Metric 3: Works Completed */}
+            <div className="civic-card p-5">
+              <div className="flex items-center justify-between text-slate-400 mb-2 font-primary">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Works Completed
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <Building className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">
+                {termStats.completed.toLocaleString()}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1 font-primary">
+                {Math.round((termStats.completed / termStats.totalWorks) * 100)}% completion efficacy ratio
+              </p>
+            </div>
+
+            {/* Metric 4: Explainable AI Risk Flags */}
+            <div className="civic-card p-5 border-amber-200/80 bg-gradient-to-br from-white to-amber-50/30">
+              <div className="flex items-center justify-between text-slate-400 mb-2 font-primary">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-700">
+                  Active Risk Flags
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-extrabold text-amber-800 font-mono tracking-tight">
+                {termStats.flagged} Works
+              </div>
+              <Link
+                href="/queue"
+                className="text-[11px] font-bold text-amber-700 hover:text-amber-900 mt-1 inline-flex items-center gap-1 font-primary"
+              >
+                <span>Inspect in Explainable Queue</span>
+                <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Visual Analytics Grid: Utilization Gauge & Sector Breakdown */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Fund Utilization Gauge Component (Matching Empowered Indian) */}
+          <div className="lg:col-span-1">
+            <FundUtilizationGauge
+              utilization={termStats.utilization}
+              title="Fund Utilization Gauge"
+              subtitle="National average expenditure vs cumulative statutory entitlement"
+            />
+          </div>
+
+          {/* Sector-wise Breakdown */}
+          <div className="lg:col-span-2">
+            <SectorBreakdown
+              selectedSector={selectedSector}
+              onSelectSector={(s) => setSelectedSector(s)}
+            />
+          </div>
+        </div>
+
+        {/* Interactive State Leaderboard & Performance Comparison */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <span className="civic-eyebrow">Federated Oversight</span>
+              <h3 className="text-2xl font-bold text-slate-900 font-display">
+                State-wise Performance & Utilization Leaderboard
+              </h3>
+              <p className="text-xs text-slate-500 font-primary">
+                Compare MPLADS fund utilization, total sanctioned capital, and AI risk alerts across Indian states.
+              </p>
+            </div>
+
+            {/* Sort Buttons */}
+            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold font-primary">
+              <span className="text-[11px] text-slate-400 px-2 font-medium">Sort:</span>
+              <button
+                onClick={() => setStateSortKey("utilization")}
+                className={`px-3 py-1 rounded-lg transition-all ${
+                  stateSortKey === "utilization"
+                    ? "bg-white text-slate-900 shadow-2xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Utilization %
+              </button>
+              <button
+                onClick={() => setStateSortKey("sanctionedCr")}
+                className={`px-3 py-1 rounded-lg transition-all ${
+                  stateSortKey === "sanctionedCr"
+                    ? "bg-white text-slate-900 shadow-2xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Sanctioned ₹
+              </button>
+              <button
+                onClick={() => setStateSortKey("flaggedWorks")}
+                className={`px-3 py-1 rounded-lg transition-all ${
+                  stateSortKey === "flaggedWorks"
+                    ? "bg-white text-slate-900 shadow-2xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Risk Flags
+              </button>
+            </div>
+          </div>
+
+          {/* States Table & Comparison Bars */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-primary">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider text-[11px]">
+                  <th className="pb-3 font-semibold">State / UT</th>
+                  <th className="pb-3 font-semibold text-center">MPs</th>
+                  <th className="pb-3 font-semibold text-right">Sanctioned (₹ Cr)</th>
+                  <th className="pb-3 font-semibold text-right">Expenditure (₹ Cr)</th>
+                  <th className="pb-3 font-semibold px-4">Fund Utilization</th>
+                  <th className="pb-3 font-semibold text-center">Flags</th>
+                  <th className="pb-3 font-semibold text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {sortedStates.map((st) => (
+                  <tr key={st.code} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3.5 font-bold text-slate-900 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-md bg-blue-50 text-blue-700 font-mono font-bold text-[10px] flex items-center justify-center">
+                        {st.code}
+                      </div>
+                      <span>{st.name}</span>
+                    </td>
+                    <td className="py-3.5 text-center text-slate-600 font-mono font-medium">
+                      {st.mps}
+                    </td>
+                    <td className="py-3.5 text-right font-mono font-bold text-slate-900">
+                      ₹{st.sanctionedCr.toLocaleString()} Cr
+                    </td>
+                    <td className="py-3.5 text-right font-mono text-slate-600">
+                      ₹{st.expenditureCr.toLocaleString()} Cr
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              st.utilization >= 85
+                                ? "bg-emerald-500"
+                                : st.utilization >= 70
+                                ? "bg-amber-500"
+                                : "bg-rose-500"
+                            }`}
+                            style={{ width: `${st.utilization}%` }}
+                          />
+                        </div>
+                        <span className="font-mono font-bold text-slate-900 w-12 text-right">
+                          {st.utilization}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 text-center">
+                      {st.flaggedWorks > 0 ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 font-mono">
+                          {st.flaggedWorks}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300 text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 text-right">
+                      <Link
+                        href={`/track-area?state=${st.code}`}
+                        className="text-blue-600 hover:text-blue-800 font-bold inline-flex items-center gap-1"
+                      >
+                        <span>Drilldown</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Track My Area: Constituency Explorer */}
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <span className="civic-eyebrow">Citizen Transparency Tool</span>
+              <h3 className="text-2xl font-bold text-slate-900 font-display">
+                Track My Area: Parliamentary Constituencies
+              </h3>
+              <p className="text-xs text-slate-500 font-primary">
+                Search developmental works, fund utilization, and AI audit score in your constituency.
+              </p>
+            </div>
+
+            {/* Quick Search */}
+            <div className="relative max-w-xs w-full">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+                placeholder="Search constituency or state..."
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-primary focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
+              />
+            </div>
+          </div>
+
+          {/* Constituency Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {filteredConstituencies.slice(0, 8).map((c) => (
+              <ConstituencyCard key={c.id} constituency={c} />
             ))}
           </div>
 
-          <Link
-            href="/investigation/HERO-MPLADS-001"
-            className="block text-center w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 text-xs font-bold rounded-xl transition-colors"
-          >
-            Launch Full Investigation Screen →
-          </Link>
-        </div>
-      </section>
-
-      {/* Core Principles Grid */}
-      <section className="py-16 bg-white border-y border-slate-200/80 px-6 lg:px-12">
-        <div className="max-w-6xl mx-auto space-y-12">
-          <div className="text-center space-y-2 max-w-2xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Built on 5 Invariant Architectural Pillars
-            </h2>
-            <p className="text-xs text-slate-500">
-              Designed specifically for government compliance and multi-tier public administration.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
-                <Coins className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-base">Peer Cohort Cost Comparison</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Never compares against a simplistic national average. Clusters works by sector, terrain, and fiscal year to compute legitimate statistical z-score deviations.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
-                <ImageIcon className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-base">Perceptual Hash Duplicate Detection</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Calculates 64-bit pHash fingerprints and bitwise Hamming distances to spot reused completion evidence photos across distinct projects and tenures.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
-                <Clock className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-base">Role-Attributed SLA Bottlenecks</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Tracks stage delays against statutory norms (45-day sanction, 1-year completion) with objective designation attribution, with zero naming of individual officers.
-              </p>
-            </div>
+          <div className="mt-4 text-center">
+            <Link
+              href="/track-area"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors font-primary"
+            >
+              <span>Explore All 543 Constituencies</span>
+              <ArrowRight className="w-3.5 h-3.5 text-blue-400" />
+            </Link>
           </div>
         </div>
-      </section>
 
-      {/* Future Roadmap Section (Text Only - Strict Compliance with Exclusion List) */}
-      <section className="py-16 px-6 lg:px-12 max-w-6xl mx-auto space-y-8">
-        <div className="text-center space-y-2 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
-            <Compass className="w-3.5 h-3.5" />
-            Forward-Looking Vision
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-            Future Research & Platform Roadmap
-          </h2>
-          <p className="text-xs text-slate-500">
-            Excluded from current MVP scope to prioritize deep explainability over shallow feature counts.
-          </p>
-        </div>
+        {/* SIH / Authority Hero Spotlight Box: PRJ-2024-003 */}
+        <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white rounded-3xl p-6 sm:p-10 shadow-xl relative overflow-hidden">
+          <div className="relative z-10 max-w-2xl space-y-4 font-primary">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>SIH 2026 Golden Demo Case • 30-Second Hero Audit</span>
+            </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-          <div className="p-4 rounded-xl border border-slate-200/80 bg-white space-y-1.5">
-            <span className="font-bold text-slate-900 block">1. Satellite SAR Change Detection</span>
-            <p className="text-slate-500">
-              Temporal Sentinel-1/2 synthetic aperture radar analysis for physical surface elevation changes.
+            <h3 className="text-2xl sm:text-4xl font-extrabold text-white font-display tracking-tight leading-tight">
+              Community Health Center Wing: PRJ-2024-003
+            </h3>
+
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+              Explore the explainable AI multi-signal fusion: 97% perceptual duplicate photo match (pHash), 1127% peer cost outlier, and 4.1× normative SLA stage delay. Experience the full human-in-the-loop audit workflow.
             </p>
-          </div>
 
-          <div className="p-4 rounded-xl border border-slate-200/80 bg-white space-y-1.5">
-            <span className="font-bold text-slate-900 block">2. ML Delay Forecasting</span>
-            <p className="text-slate-500">
-              Predictive gradient-boosted models forecasting contractor abandonment prior to milestone breach.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl border border-slate-200/80 bg-white space-y-1.5">
-            <span className="font-bold text-slate-900 block">3. Procurement Entity Graph</span>
-            <p className="text-slate-500">
-              Cross-district contractor syndicate detection via multi-relational graph neural networks.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl border border-slate-200/80 bg-white space-y-1.5">
-            <span className="font-bold text-slate-900 block">4. Multilingual LLM Citizen Assistant</span>
-            <p className="text-slate-500">
-              Voice-first local language RTI and MPLADS grievance filing assistant for rural constituents.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer with Civic Landmark Motif (Inspired by Screenshot 5) */}
-      <footer className="bg-slate-900 text-slate-400 mt-auto border-t border-slate-800 pt-12 pb-8 px-6 lg:px-12">
-        <div className="max-w-6xl mx-auto space-y-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
-            <div className="space-y-3 md:col-span-2">
-              <div className="flex items-center gap-2 text-white font-bold text-base">
-                <ShieldAlert className="w-5 h-5 text-blue-400" />
-                RiskLens for MPLADS
-              </div>
-              <p className="text-slate-400 max-w-sm leading-relaxed">
-                From monitoring to risk intelligence. An explainable AI verification platform built for transparent public infrastructure delivery across parliamentary constituencies.
-              </p>
-              <div className="pt-1">
-                <DataSourceBadge type="synthetic" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <span className="font-bold text-white uppercase tracking-wider text-[11px] block">
-                Platform
-              </span>
-              <ul className="space-y-1.5 text-slate-400">
-                <li>
-                  <Link href="/district" className="hover:text-white transition-colors">
-                    District Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/queue" className="hover:text-white transition-colors">
-                    Investigation Queue
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/investigation/HERO-MPLADS-001" className="hover:text-white transition-colors">
-                    Hero Spotlight (30s)
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/how-it-works" className="hover:text-white transition-colors">
-                    How Scoring Works
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <span className="font-bold text-white uppercase tracking-wider text-[11px] block">
-                Ethical Safeguards
-              </span>
-              <ul className="space-y-1.5 text-slate-400">
-                <li>• No Real Personal Names</li>
-                <li>• Neutral Regulatory Tone</li>
-                <li>• Human Officer Discretion</li>
-                <li>• 100% Offline Pitch Ready</li>
-              </ul>
+            <div className="pt-2 flex flex-wrap items-center gap-3">
+              <Link
+                href="/investigation/PRJ-2024-003"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xs shadow-md transition-all inline-flex items-center gap-2"
+              >
+                <span>Open Hero Investigation</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/graph"
+                className="px-5 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-semibold text-xs transition-all inline-flex items-center gap-2"
+              >
+                <span>View Entity Network</span>
+              </Link>
+              <Link
+                href="/compare"
+                className="px-5 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-semibold text-xs transition-all inline-flex items-center gap-2"
+              >
+                <GitCompare className="w-4 h-4 text-blue-300" />
+                <span>Compare Constituencies</span>
+              </Link>
             </div>
           </div>
 
-          {/* Civic Heritage Skyline Motif Bar */}
-          <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[11px]">
-            <div>
-              Smart India Hackathon (SIH) 2026 Official Submission • Team AI-RiskLens
-            </div>
-            <div>
-              Built for Ministry of Statistics and Programme Implementation (MoSPI)
-            </div>
+          {/* Decorative Background Accent */}
+          <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none translate-x-12 translate-y-12">
+            <ShieldAlert className="w-96 h-96 text-white" />
           </div>
         </div>
-      </footer>
-    </div>
+      </div>
+    </DashboardShell>
   );
 }
