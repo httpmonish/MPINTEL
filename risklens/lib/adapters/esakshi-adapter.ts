@@ -95,6 +95,7 @@ export function normalizeEsakshiRecord(raw: EsakshiRawRecord): Omit<Project, "ri
     stateCode: raw.state_identifier,
     sanctionedAmountINR: raw.estimated_cost_inr,
     expenditureAmountINR: raw.expenditure_inr,
+    physicalProgressPct: raw.actual_completion_date ? 100 : Math.min(100, Math.round((raw.expenditure_inr / Math.max(1, raw.estimated_cost_inr)) * 100)),
     peerGroupMedianINR: raw.estimated_cost_inr * 0.85,
     peerGroupRangeMinINR: raw.estimated_cost_inr * 0.7,
     peerGroupRangeMaxINR: raw.estimated_cost_inr * 1.15,

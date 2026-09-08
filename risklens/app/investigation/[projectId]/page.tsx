@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useRiskLensStore } from "@/lib/store";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { DataSourceBadge } from "@/components/cards/DataSourceBadge";
 import { RiskGauge } from "@/components/charts/RiskGauge";
+import { InvestigationCopilot } from "@/components/investigation/InvestigationCopilot";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,19 +21,20 @@ import {
   Image as ImageIcon,
   CheckCircle2,
   AlertOctagon,
-  ArrowRight,
-  HelpCircle,
   FileCheck2,
-  Share2,
-  Layers,
   ChevronRight,
+  TrendingUp,
+  Activity,
+  Layers,
+  Satellite,
+  Lock,
+  GitFork,
 } from "lucide-react";
 
 export default function InvestigationDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const projectId = (params?.projectId as string) || "HERO-MPLADS-001";
-  const { projects, takeOfficerAction, currentRole } = useRiskLensStore();
+  const { projects, takeOfficerAction } = useRiskLensStore();
 
   const [officerNotes, setOfficerNotes] = useState("");
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
@@ -68,9 +70,16 @@ export default function InvestigationDetailPage() {
     setTimeout(() => setActionSuccessMsg(null), 5000);
   };
 
+  const disbursedPct =
+    project.sanctionedAmountINR > 0
+      ? Math.min(100, Math.round((project.expenditureAmountINR / project.sanctionedAmountINR) * 100))
+      : 0;
+
+  const isProgressMismatch = disbursedPct - project.physicalProgressPct > 30;
+
   return (
     <DashboardShell>
-      <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="space-y-6 max-w-6xl mx-auto pb-12">
         {/* Breadcrumb & Navigation */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -111,9 +120,19 @@ export default function InvestigationDetailPage() {
                 <Badge variant={project.status === "Delayed" ? "alert" : "secondary"}>
                   {project.status}
                 </Badge>
-                <span className="text-xs text-slate-500 font-medium">
-                  {project.constituencyId} ({project.stateCode})
-                </span>
+                {project.delayPrediction && (
+                  <span
+                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${
+                      project.delayPrediction.likelihood === "High"
+                        ? "bg-red-50 text-red-700 border border-red-200"
+                        : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    <Activity className="w-3 h-3" />
+                    Predicted Trajectory: {project.delayPrediction.likelihood} Delay Risk (
+                    {project.delayPrediction.probabilityScore}%)
+                  </span>
+                )}
               </div>
 
               <h1 className="text-2xl font-bold tracking-tight text-slate-900 leading-tight">
@@ -126,16 +145,20 @@ export default function InvestigationDetailPage() {
                   <span className="font-semibold text-slate-800">{project.workCategory}</span>
                 </div>
                 <div>
+                  <span className="text-slate-400 block text-[11px]">Constituency Scope</span>
+                  <span className="font-semibold text-slate-800">
+                    {project.constituencyId} ({project.stateCode})
+                  </span>
+                </div>
+                <div>
                   <span className="text-slate-400 block text-[11px]">Sanction Date</span>
                   <span className="font-semibold text-slate-800">{project.sanctionDate}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Implementing Role</span>
-                  <span className="font-semibold text-slate-800">{project.implementingAgencyRole}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Sanctioned Entitlement</span>
-                  <span className="font-bold text-slate-900 text-sm">{formatINR(project.sanctionedAmountINR)}</span>
+                  <span className="text-slate-400 block text-[11px]">Sanctioned Amount</span>
+                  <span className="font-bold text-slate-900 text-sm">
+                    {formatINR(project.sanctionedAmountINR)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -162,6 +185,99 @@ export default function InvestigationDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Phase 2 Extension 2.3: Dual Progress Visualizer (Physical vs Financial Burn Mismatch) */}
+        <Card className="border-slate-200/80">
+          <CardHeader className="border-b border-slate-100 p-4 bg-slate-50/40">
+            <CardTitle className="text-sm flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-blue-600" />
+                Physical Progress vs. Financial Disbursement Mismatch
+              </span>
+              {isProgressMismatch && (
+                <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                  {disbursedPct - project.physicalProgressPct}% Gap Anomaly
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-5 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs font-semibold">
+                  <span className="text-slate-600">Financial Disbursed</span>
+                  <span className="text-slate-900 font-bold">{disbursedPct}% ({formatINR(project.expenditureAmountINR)})</span>
+                </div>
+                <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-600 rounded-full" style={{ width: `${disbursedPct}%` }} />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs font-semibold">
+                  <span className="text-slate-600">Physical Asset Completion</span>
+                  <span className={project.physicalProgressPct < 50 ? "text-amber-600 font-bold" : "text-emerald-600 font-bold"}>
+                    {project.physicalProgressPct}% Verified
+                  </span>
+                </div>
+                <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${
+                      isProgressMismatch ? "bg-amber-500" : "bg-emerald-500"
+                    }`}
+                    style={{ width: `${project.physicalProgressPct}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {isProgressMismatch && (
+              <div className="p-3 bg-amber-50 rounded-xl text-xs text-amber-800 leading-relaxed">
+                <strong>Disbursement Velocity Alert:</strong> 100% of sanctioned funds have been disbursed while independent site measurements confirm only {project.physicalProgressPct}% physical foundation completion.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Phase 2 Extension 2.4: Historical Risk Score Timeline */}
+        {project.riskScore.history && project.riskScore.history.length > 0 && (
+          <Card className="border-slate-200/80">
+            <CardHeader className="border-b border-slate-100 p-4 bg-slate-50/40">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Clock className="w-4 h-4 text-slate-700" />
+                Historical Risk Score Progression & Event Triggers
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                {project.riskScore.history.map((pt, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 space-y-1 text-xs"
+                  >
+                    <div className="flex items-center justify-between font-bold">
+                      <span className="text-slate-400 font-mono text-[10px]">{pt.date}</span>
+                      <span
+                        className={`font-extrabold ${
+                          pt.score >= 60
+                            ? "text-red-600"
+                            : pt.score >= 35
+                            ? "text-amber-600"
+                            : "text-emerald-600"
+                        }`}
+                      >
+                        {pt.score}/100
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-snug">
+                      {pt.triggerEvent}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Multi-Signal Deep-Dive Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -193,7 +309,7 @@ export default function InvestigationDetailPage() {
                   </span>
                 </div>
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-[11px] text-slate-400 block">Peer Normal Range</span>
+                  <span className="text-[11px] text-slate-400 block">Peer Band</span>
                   <span className="text-xs font-bold text-slate-700">
                     {formatINR(project.peerGroupRangeMinINR)} - {formatINR(project.peerGroupRangeMaxINR)}
                   </span>
@@ -201,8 +317,8 @@ export default function InvestigationDetailPage() {
               </div>
 
               <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed">
-                Cost benchmark evaluated against 42 similar works in sector &apos;{project.workCategory}&apos; within regional terrain tier.
-                Sanctioned budget deviates by <strong>+{( (project.sanctionedAmountINR / project.peerGroupMedianINR) * 100 - 100).toFixed(0)}%</strong> from cohort median.
+                Cost benchmark evaluated against works in sector &apos;{project.workCategory}&apos;.
+                Sanctioned budget exceeds peer median by <strong>+{( (project.sanctionedAmountINR / project.peerGroupMedianINR) * 100 - 100).toFixed(0)}%</strong>.
               </div>
             </CardContent>
           </Card>
@@ -276,6 +392,77 @@ export default function InvestigationDetailPage() {
           </Card>
         </div>
 
+        {/* Phase 4 Extension 4.2: Satellite Change Detection & Cross-Scheme Double Dipping */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader className="border-b border-slate-100 pb-3">
+              <CardTitle className="text-base flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Satellite className="w-4 h-4 text-cyan-600" />
+                  Independent Satellite Change-Detection (Sentinel-2 / Bhuvan)
+                </span>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-cyan-50 text-cyan-800 border border-cyan-200">
+                  Supporting Signal
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-3">
+              <div className="grid grid-cols-2 gap-3 text-center">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-slate-500 font-semibold block">T0 Pre-Sanction (Aug 2023)</span>
+                  <div className="h-28 rounded-lg bg-slate-900 border border-slate-300 flex items-center justify-center text-slate-400 text-xs font-mono">
+                    [Base Surface Tile]
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] text-slate-500 font-semibold block">T1 Current Tile (Jun 2024)</span>
+                  <div className="h-28 rounded-lg bg-slate-800 border border-cyan-400 flex items-center justify-center text-cyan-300 text-xs font-mono">
+                    [Pixel Diff Conf: 68%]
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Optical surface reflectance indicates physical structure erection with 68% confidence. Labeled as an independent supporting signal, not definitive proof.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Phase 4 Extension 4.4: Cross-Scheme Double-Dipping Match */}
+          <Card>
+            <CardHeader className="border-b border-slate-100 pb-3">
+              <CardTitle className="text-base flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <GitFork className="w-4 h-4 text-amber-600" />
+                  Cross-Scheme Double-Dipping Collision
+                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                  Overlap Flag
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-3">
+              {project.crossSchemeMatch ? (
+                <div className="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2 text-xs">
+                  <div className="font-bold text-amber-900 flex items-center justify-between">
+                    <span>Matched Scheme: {project.crossSchemeMatch.matchedScheme}</span>
+                    <span className="font-mono text-[11px]">{project.crossSchemeMatch.externalProjectId}</span>
+                  </div>
+                  <p className="text-amber-800 leading-relaxed">
+                    Identical asset described as <em>&quot;{project.crossSchemeMatch.assetDescription}&quot;</em> sanctioned on overlapping coordinates ({project.crossSchemeMatch.spatialDistanceMeters}m separation, {project.crossSchemeMatch.textOverlapScore}% text similarity).
+                  </p>
+                  <div className="text-[11px] text-amber-700 font-medium">
+                    Sanctioned under Grant: {formatINR(project.crossSchemeMatch.sanctionedAmountINR)}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-500 py-6 text-center">
+                  No cross-scheme claims registered on these geographic coordinates.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Signal 3: Stage-Wise SLA Bottleneck & Role Attribution */}
         <Card>
           <CardHeader className="border-b border-slate-100 pb-3">
@@ -313,7 +500,7 @@ export default function InvestigationDetailPage() {
                         )}
                       </div>
                       <div className="text-slate-500 text-[11px]">
-                        Assigned Role / Jurisdiction:{" "}
+                        Assigned Role / Designation:{" "}
                         <strong className="text-slate-800">{stage.responsibleRole}</strong>
                       </div>
                     </div>
@@ -341,54 +528,7 @@ export default function InvestigationDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Signal 4: Payment Milestone Stepper & UC Compliance */}
-        <Card>
-          <CardHeader className="border-b border-slate-100 pb-3">
-            <CardTitle className="text-base flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <FileCheck2 className="w-4 h-4 text-emerald-600" />
-                Payment Tranche Disbursement & Utilization Certificates (UC)
-              </span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                +12 pts
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {project.paymentTranches.map((t) => (
-                <div
-                  key={t.trancheNumber}
-                  className={`p-4 rounded-xl border text-xs space-y-2 ${
-                    !t.utilizationCertificateSubmitted && t.trancheNumber > 1
-                      ? "border-amber-300 bg-amber-50/60"
-                      : "border-slate-200/80 bg-white"
-                  }`}
-                >
-                  <div className="flex items-center justify-between font-bold text-slate-800">
-                    <span>Tranche #{t.trancheNumber}</span>
-                    <span>{formatINR(t.amountINR)}</span>
-                  </div>
-                  <div className="text-[11px] text-slate-500">{t.stageMilestone}</div>
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
-                    <span className="text-slate-400">Date: {t.disbursedDate}</span>
-                    <span
-                      className={`font-semibold px-2 py-0.5 rounded ${
-                        t.utilizationCertificateSubmitted
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {t.utilizationCertificateSubmitted ? "UC Verified" : "UC Missing"}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* HUMAN-IN-THE-LOOP OFFICER ACTION PANEL (GOLDEN RULE MANDATE) */}
+        {/* HUMAN-IN-THE-LOOP OFFICER ACTION PANEL */}
         <Card className="border-slate-900/20 shadow-md">
           <CardHeader className="bg-slate-900 text-white rounded-t-2xl p-5">
             <CardTitle className="text-base text-white flex items-center justify-between">
@@ -437,9 +577,8 @@ export default function InvestigationDetailPage() {
               />
             </div>
 
-            {/* Three Visually Distinct Action Triggers */}
+            {/* Three Action Triggers */}
             <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
-              {/* Action 1: Mark False Alarm (Outline Style) */}
               <Button
                 variant="outline"
                 size="default"
@@ -449,7 +588,6 @@ export default function InvestigationDetailPage() {
                 Mark False Alarm (Valid Justification)
               </Button>
 
-              {/* Action 2: Needs More Evidence (Solid Neutral) */}
               <Button
                 variant="secondary"
                 size="default"
@@ -459,7 +597,6 @@ export default function InvestigationDetailPage() {
                 Needs More Evidence (Field Visit)
               </Button>
 
-              {/* Action 3: Confirm Issue & Escalate (Reserved Alert Accent) */}
               <Button
                 variant="alert"
                 size="default"
@@ -471,6 +608,9 @@ export default function InvestigationDetailPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Docked Domain-Scoped Investigation Copilot */}
+        <InvestigationCopilot project={project} />
       </div>
     </DashboardShell>
   );

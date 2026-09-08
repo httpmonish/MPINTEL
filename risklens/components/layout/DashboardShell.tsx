@@ -14,14 +14,14 @@ import {
   FileSearch,
   Building2,
   PieChart,
-  UserCheck,
   ChevronDown,
   Search,
   Wifi,
-  ExternalLink,
-  Layers,
   Sparkles,
   Award,
+  Network,
+  Route,
+  HeartHandshake,
 } from "lucide-react";
 
 interface NavItem {
@@ -45,9 +45,28 @@ const NAV_ITEMS: NavItem[] = [
     badge: "Active Flags",
   },
   {
-    title: "All Projects",
-    href: "/projects",
-    icon: FolderKanban,
+    title: "Hero Spotlight",
+    href: "/investigation/HERO-MPLADS-001",
+    icon: Sparkles,
+    badge: "30s Demo",
+  },
+  {
+    title: "Entity Network Graph",
+    href: "/graph",
+    icon: Network,
+    badge: "Syndicates",
+  },
+  {
+    title: "Inspection Optimizer",
+    href: "/inspections/optimizer",
+    icon: Route,
+    badge: "≥10% SLA",
+  },
+  {
+    title: "Equity Radar",
+    href: "/equity",
+    icon: HeartHandshake,
+    badge: "Fairness",
   },
   {
     title: "Money Monitoring",
@@ -55,10 +74,9 @@ const NAV_ITEMS: NavItem[] = [
     icon: PieChart,
   },
   {
-    title: "Hero Demo Spotlight",
-    href: "/investigation/HERO-MPLADS-001",
-    icon: Sparkles,
-    badge: "30s Demo",
+    title: "All Projects",
+    href: "/projects",
+    icon: FolderKanban,
   },
   {
     title: "How Scoring Works",
@@ -115,7 +133,7 @@ export const DashboardShell: React.FC<{ children: React.ReactNode }> = ({
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="font-semibold text-white">RiskLens for MPLADS</span>
-          <span className="text-slate-400">| Explainable AI Risk Intelligence on top of eSAKSHI</span>
+          <span className="text-slate-400">| Full Production Suite (Phases 1–6)</span>
         </div>
         <div className="flex items-center gap-3">
           <DataSourceBadge type="synthetic" />
@@ -132,7 +150,7 @@ export const DashboardShell: React.FC<{ children: React.ReactNode }> = ({
       <div className="flex flex-1">
         {/* Persistent Left Sidebar */}
         <aside className="w-64 bg-white border-r border-slate-200/80 shrink-0 hidden md:flex flex-col justify-between">
-          <div className="p-4 space-y-6">
+          <div className="p-4 space-y-5">
             {/* Logo & Platform Positioning */}
             <div className="px-2">
               <Link href="/district" className="flex items-center gap-2.5">
@@ -143,11 +161,11 @@ export const DashboardShell: React.FC<{ children: React.ReactNode }> = ({
                   <div className="font-bold text-base tracking-tight text-slate-900 flex items-center gap-1.5">
                     RiskLens
                     <span className="text-[10px] bg-blue-100 text-blue-800 font-semibold px-1.5 py-0.2 rounded">
-                      AI v2.1
+                      v2.1
                     </span>
                   </div>
                   <div className="text-[10px] text-slate-500 font-medium">
-                    Explainable MPLADS Auditing
+                    Explainable Risk Intelligence
                   </div>
                 </div>
               </Link>
@@ -156,7 +174,7 @@ export const DashboardShell: React.FC<{ children: React.ReactNode }> = ({
             {/* Active Session Box */}
             <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/60">
               <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
-                Active Demo Scope
+                Active Authority Scope
               </div>
               <div className="font-semibold text-xs text-slate-900 truncate">
                 {currentRoleInfo.title}
@@ -190,15 +208,17 @@ export const DashboardShell: React.FC<{ children: React.ReactNode }> = ({
                     {item.badge && (
                       <span
                         className={cn(
-                          "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+                          "text-[9px] font-bold px-1.5 py-0.5 rounded-full",
                           isActive
                             ? "bg-white/20 text-white"
                             : item.badge === "Active Flags"
                             ? "bg-amber-100 text-amber-800"
-                            : "bg-blue-50 text-blue-700"
+                            : item.badge === "Fairness"
+                            ? "bg-cyan-100 text-cyan-800"
+                            : "bg-slate-100 text-slate-700"
                         )}
                       >
-                        {item.badge === "Active Flags" ? `${flaggedCount} Cases` : item.badge}
+                        {item.badge === "Active Flags" ? `${flaggedCount}` : item.badge}
                       </span>
                     )}
                   </Link>
@@ -231,12 +251,12 @@ export const DashboardShell: React.FC<{ children: React.ReactNode }> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search works by ID, category, or constituency..."
+                placeholder="Search works by ID, sector, or constituency..."
                 className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all"
               />
             </div>
 
-            {/* FAST ROLE SWITCHER (CRITICAL FOR LIVE JUDGE DEMOS) */}
+            {/* FAST ROLE SWITCHER */}
             <div className="relative">
               <button
                 onClick={() => setRoleMenuOpen(!roleMenuOpen)}

@@ -39,6 +39,7 @@ export interface StageEvent {
   responsibleRole: string; // e.g. "District Planning Officer IDA", "Executive Engineer PWD" - NEVER personal names
   isDelayed: boolean;
   delayRatio: number;
+  physicalProgressAtStage?: number; // 0 - 100%
 }
 
 export interface EvidencePhoto {
@@ -53,15 +54,32 @@ export interface EvidencePhoto {
   matchedProjectId?: string;
   hammingDistance?: number;
   isDuplicateFlagged?: boolean;
+  isCryptographicallySigned?: boolean;
+  signatureHash?: string;
+  deviceFingerprint?: string;
 }
 
 export interface SignalBreakdownItem {
-  signal: "cost_anomaly" | "sla_delay" | "payment_anomaly" | "gis_similarity" | "photo_similarity";
+  signal:
+    | "cost_anomaly"
+    | "sla_delay"
+    | "payment_anomaly"
+    | "gis_similarity"
+    | "photo_similarity"
+    | "progress_mismatch"
+    | "fiscal_rush"
+    | "cross_scheme";
   label: string;
   points: number;
   maxPoints: number;
   reason: string;
   isTriggered: boolean;
+}
+
+export interface RiskTimelinePoint {
+  date: string;
+  score: number;
+  triggerEvent: string;
 }
 
 export interface RiskScore {
@@ -71,6 +89,35 @@ export interface RiskScore {
   breakdown: SignalBreakdownItem[];
   calculatedAt: string;
   algorithmVersion: string;
+  history?: RiskTimelinePoint[];
+}
+
+export interface DelayPrediction {
+  likelihood: "Low" | "Medium" | "High";
+  probabilityScore: number; // 0 - 100%
+  expectedDelayDays: number;
+  primaryRiskFactors: string[];
+}
+
+export interface CitizenSubmission {
+  id: string;
+  projectId: string;
+  photoUrl: string;
+  submittedAt: string;
+  latitude: number;
+  longitude: number;
+  pHash: string;
+  verificationMatch: boolean;
+  notes: string;
+}
+
+export interface CrossSchemeDuplicate {
+  matchedScheme: "PMGSY (Rural Roads)" | "MLA-LAD (State)" | "15th Finance Commission Grant";
+  externalProjectId: string;
+  assetDescription: string;
+  sanctionedAmountINR: number;
+  spatialDistanceMeters: number;
+  textOverlapScore: number; // 0 - 100%
 }
 
 export interface Constituency {
@@ -82,6 +129,9 @@ export interface Constituency {
   averageRiskScore: number;
   openFlaggedCasesCount: number;
   avatarSeed: string;
+  utilizationRatePct?: number;
+  inspectionCoveragePct?: number;
+  isNeglectedEquityFlagged?: boolean;
 }
 
 export interface InvestigationCase {
@@ -100,11 +150,13 @@ export interface InvestigationCase {
 export interface Project {
   id: string; // e.g. "PRJ-2024-001" or "HERO-MPLADS-001"
   title: string;
+  description?: string;
   workCategory: WorkCategory;
   constituencyId: string;
   stateCode: string;
   sanctionedAmountINR: number;
   expenditureAmountINR: number;
+  physicalProgressPct: number; // 0 - 100%
   peerGroupMedianINR: number;
   peerGroupRangeMinINR: number;
   peerGroupRangeMaxINR: number;
@@ -115,10 +167,14 @@ export interface Project {
   latitude: number;
   longitude: number;
   implementingAgencyRole: string; // Role designation only
+  contractorEntityId?: string; // e.g. "ENT-PWD-CORP-42"
   paymentTranches: PaymentTranche[];
   stageEvents: StageEvent[];
   photos: EvidencePhoto[];
   riskScore: RiskScore;
+  delayPrediction?: DelayPrediction;
+  crossSchemeMatch?: CrossSchemeDuplicate;
+  citizenSubmissions?: CitizenSubmission[];
   investigationCase?: InvestigationCase;
   synthetic: boolean;
   dataSource: DataSourceType;
