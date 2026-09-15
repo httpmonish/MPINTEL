@@ -189,13 +189,19 @@ export function FieldEvidenceTimeline({
                         className="p-2 bg-white rounded-lg border border-slate-200 hover:border-cyan-500/80 cursor-pointer transition-all shadow-2xs group space-y-1.5"
                       >
                         <div className="aspect-16/10 bg-slate-900 rounded overflow-hidden relative flex items-center justify-center">
-                          <svg className="w-full h-full" viewBox="0 0 200 120">
-                            <rect width="200" height="120" fill="#1e293b" />
-                            <path d="M 0 80 Q 70 70 200 90 L 200 120 L 0 120 Z" fill="#334155" />
-                            <rect x="90" y="40" width="20" height="50" fill="#94a3b8" />
-                            <circle cx="100" cy="35" r="8" fill="#38bdf8" />
-                          </svg>
-                          <span className="absolute bottom-1 right-1 text-[8px] bg-slate-950/80 text-white font-mono px-1 rounded">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={photo.url}
+                            alt={photo.caption || "Inspection proof"}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              if (!target.src.includes("unsplash.com/photo-1541888946425")) {
+                                target.src = "https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?auto=format&fit=crop&w=800&q=80";
+                              }
+                            }}
+                          />
+                          <span className="absolute bottom-1 right-1 text-[8px] bg-slate-950/85 text-white font-mono px-1 rounded shadow-xs">
                             {photo.capturedAt.slice(11, 16)} UTC
                           </span>
                         </div>

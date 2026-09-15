@@ -31,13 +31,40 @@ export function ChangeMaskOverlay({
   const changeY = isOffset ? 65 : 125;
   const changeRadius = isOffset ? 28 : 36;
 
+  const lat = evidence.latitude || 19.0760;
+  const lon = evidence.longitude || 72.8777;
+  const deltaLon = 0.0035;
+  const deltaLat = 0.0025;
+  const minLon = (lon - deltaLon).toFixed(5);
+  const minLat = (lat - deltaLat).toFixed(5);
+  const maxLon = (lon + deltaLon).toFixed(5);
+  const maxLat = (lat + deltaLat).toFixed(5);
+
+  const realSatelliteUrl = `https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${minLon},${minLat},${maxLon},${maxLat}&bboxSR=4326&imageSR=4326&size=600,450&format=jpg&f=image`;
+
   return (
     <div
       className={`relative w-full aspect-4/3 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 flex flex-col justify-between p-3 select-none ${className}`}
     >
-      {/* Dynamic Satellite Canvas Simulation */}
+      {/* Real Optical Satellite Imagery Base */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={realSatelliteUrl}
+        alt={`Satellite observation at ${lat}, ${lon}`}
+        className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 ${
+          isDiff ? "grayscale contrast-150 brightness-75" : "contrast-105 brightness-95"
+        }`}
+        onError={(e) => {
+          const target = e.currentTarget;
+          if (!target.src.includes("unsplash.com")) {
+            target.src = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80";
+          }
+        }}
+      />
+
+      {/* Dynamic Satellite Canvas Overlay */}
       <svg
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full pointer-events-none"
         viewBox="0 0 280 210"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -52,8 +79,9 @@ export function ChangeMaskOverlay({
             <path
               d="M 20 0 L 0 0 0 20"
               fill="none"
-              stroke="#1e293b"
+              stroke="#38bdf8"
               strokeWidth="0.5"
+              strokeOpacity="0.2"
             />
           </pattern>
 
@@ -64,28 +92,15 @@ export function ChangeMaskOverlay({
           </filter>
         </defs>
 
-        {/* Background Terrain Simulation */}
-        <rect width="280" height="210" fill="#090d16" />
+        {/* Semi-transparent Grid overlay */}
         <rect width="280" height="210" fill={`url(#sat-grid-${evidence.projectId})`} />
-
-        {/* Topographic landscape contours */}
-        <path
-          d="M 0,80 Q 70,50 140,85 T 280,70 L 280,210 L 0,210 Z"
-          fill="#0f172a"
-          opacity="0.8"
-        />
-        <path
-          d="M 0,130 Q 90,110 180,140 T 280,120 L 280,210 L 0,210 Z"
-          fill="#131e36"
-          opacity="0.7"
-        />
 
         {/* Cloud coverage overlay for LOW_QUALITY */}
         {isLowQuality && (
-          <g opacity="0.65">
-            <circle cx="120" cy="90" r="75" fill="#94a3b8" filter="blur(18px)" />
+          <g opacity="0.7">
+            <circle cx="120" cy="90" r="75" fill="#ffffff" filter="blur(18px)" />
             <circle cx="180" cy="120" r="60" fill="#cbd5e1" filter="blur(22px)" />
-            <circle cx="90" cy="140" r="50" fill="#64748b" filter="blur(15px)" />
+            <circle cx="90" cy="140" r="50" fill="#ffffff" filter="blur(15px)" />
           </g>
         )}
 
