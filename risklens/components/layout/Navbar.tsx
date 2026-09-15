@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Scale,
+  LogOut,
 } from "lucide-react";
 
 export type HouseType = "ALL" | "Lok Sabha" | "Rajya Sabha";
@@ -165,15 +166,26 @@ export const Navbar: React.FC = () => {
             <Search className="w-3.5 h-3.5 text-white/70 absolute left-2.5 pointer-events-none" />
           </form>
 
-          {/* Investigator Profile */}
+          {/* Investigator Profile Strip & Logout */}
           <div className="flex items-center gap-2 pl-2 border-l border-white/20">
             <div className="w-8 h-8 rounded-[2px] bg-[#1A56C4] border border-white/20 flex items-center justify-center text-white font-bold text-xs">
               IAS
             </div>
             <div className="hidden 2xl:flex flex-col text-left">
               <span className="text-[12px] font-bold text-white leading-tight">R. Sharma, IAS</span>
-              <span className="text-[10px] text-white/70 leading-none">OFFICIAL ROLE: AUDITOR</span>
+              <span className="text-[10px] text-white/70 leading-none">DISTRICT / STATE INVESTIGATOR</span>
             </div>
+            <button
+              onClick={() => {
+                setActiveTier("PUBLIC");
+                setRole("mp");
+                router.push("/");
+              }}
+              title="Sign Out to Landing Page"
+              className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Mobile Menu Trigger */}
