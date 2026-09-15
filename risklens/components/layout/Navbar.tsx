@@ -25,11 +25,26 @@ import {
   AlertTriangle,
   Scale,
   LogOut,
+  Bell,
+  CheckCheck,
+  Radio,
+  ExternalLink,
 } from "lucide-react";
 
 export type HouseType = "ALL" | "Lok Sabha" | "Rajya Sabha";
 export type LokSabhaTerm = "18th" | "17th" | "rajya_sabha";
 export type NavTier = "PUBLIC" | "OFFICIAL";
+
+interface TriageNotification {
+  id: string;
+  title: string;
+  description: string;
+  projectId: string;
+  link: string;
+  timestamp: string;
+  severity: "CRITICAL" | "WARNING" | "INFO";
+  read: boolean;
+}
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -42,8 +57,55 @@ export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
 
+  const [notifications, setNotifications] = useState<TriageNotification[]>([
+    {
+      id: "NOTIF-001",
+      title: "Cost Variance Anomaly (+142%)",
+      description: "Project HERO-MPLADS-001 flagged for budget exceeding district peer median by +142%.",
+      projectId: "HERO-MPLADS-001",
+      link: "/investigation/HERO-MPLADS-001",
+      timestamp: "10 mins ago",
+      severity: "CRITICAL",
+      read: false,
+    },
+    {
+      id: "NOTIF-002",
+      title: "Sentinel-2 Spatial Offset (490m)",
+      description: "Satellite pass S2B_20260912 detected structural footprint outside 100m sanctioned AOI.",
+      projectId: "PRJ-2024-003",
+      link: "/investigation/PRJ-2024-003",
+      timestamp: "35 mins ago",
+      severity: "WARNING",
+      read: false,
+    },
+    {
+      id: "NOTIF-003",
+      title: "Cross-Scheme Double-Dip Match (82%)",
+      description: "Overlapping claim found with MGNREGA on identical geographic coordinates.",
+      projectId: "HERO-MPLADS-001",
+      link: "/cross-scheme",
+      timestamp: "2 hours ago",
+      severity: "CRITICAL",
+      read: false,
+    },
+  ]);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
   const flaggedCount = projects.filter((p) => (p.riskScore?.compositeScore || 0) >= 60).length || 14;
+
+  const handleMarkAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleNotifClick = (notif: TriageNotification) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
+    );
+    setNotifOpen(false);
+    router.push(notif.link);
+  };
 
   interface NavLink {
     name: string;
@@ -165,6 +227,103 @@ export const Navbar: React.FC = () => {
             />
             <Search className="w-3.5 h-3.5 text-white/70 absolute left-2.5 pointer-events-none" />
           </form>
+
+          {/* Notification Bell with Badge & Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setNotifOpen(!notifOpen)}
+              className="relative p-1.5 text-white/90 hover:text-white hover:bg-white/10 rounded-[2px] transition-colors focus:outline-none cursor-pointer flex items-center justify-center"
+              title="Active Triage & Risk Alerts"
+            >
+              <Bell className="w-5 h-5 text-white" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-bold leading-none text-white bg-[#B3261E] rounded-[2px] border border-[#0B2149] shadow-xs animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notification Dropdown Drawer */}
+            {notifOpen && (
+              <div className="absolute right-0 top-11 w-80 sm:w-96 bg-white border border-[#D9DEE4] rounded-[4px] shadow-2xl z-50 text-[#14213D] animate-in fade-in-0 duration-150">
+                {/* Header */}
+                <div className="p-3 bg-[#0B2149] text-white rounded-t-[3px] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-cyan-400" />
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      Statutory Risk Alerts ({unreadCount} unread)
+                    </span>
+                  </div>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleMarkAllRead}
+                      className="text-[11px] text-cyan-300 hover:text-white flex items-center gap-1 font-semibold"
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+
+                {/* Notification List */}
+                <div className="divide-y divide-[#D9DEE4] max-h-80 overflow-y-auto">
+                  {notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      onClick={() => handleNotifClick(notif)}
+                      className={`p-3 hover:bg-[#FAFAF9] cursor-pointer transition-colors space-y-1 ${
+                        !notif.read ? "bg-[#FFF9E6]/40" : "bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`text-[9px] font-bold uppercase px-1.5 py-0.2 rounded-[2px] font-mono ${
+                            notif.severity === "CRITICAL"
+                              ? "bg-[#FDF2F2] text-[#B3261E] border border-[#B3261E]/30"
+                              : "bg-[#FFF9E6] text-[#7A4D05] border border-[#FFC107]/50"
+                          }`}
+                        >
+                          {notif.severity}
+                        </span>
+                        <span className="text-[10px] text-[#6B7280] font-mono">
+                          {notif.timestamp}
+                        </span>
+                      </div>
+                      <h5 className="text-xs font-bold text-[#0B2149] flex items-center justify-between">
+                        <span>{notif.title}</span>
+                        {!notif.read && (
+                          <span className="w-2 h-2 rounded-full bg-[#B3261E]" />
+                        )}
+                      </h5>
+                      <p className="text-[11px] text-[#6B7280] leading-snug">
+                        {notif.description}
+                      </p>
+                      <div className="pt-1 flex items-center justify-between text-[10px] font-mono text-[#1A56C4] font-semibold">
+                        <span>Ref: {notif.projectId}</span>
+                        <span className="flex items-center gap-0.5">
+                          View Dossier <ExternalLink className="w-2.5 h-2.5" />
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Footer */}
+                <div className="p-2.5 bg-[#FAFAF9] border-t border-[#D9DEE4] rounded-b-[3px] text-center">
+                  <Link
+                    href="/queue"
+                    onClick={() => setNotifOpen(false)}
+                    className="text-xs font-bold text-[#1A56C4] hover:text-[#0B2149] inline-flex items-center gap-1"
+                  >
+                    <span>Open Full Investigation Queue ({flaggedCount} Active)</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Investigator Profile Strip & Logout */}
           <div className="flex items-center gap-2 pl-2 border-l border-white/20">

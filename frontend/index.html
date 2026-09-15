@@ -107,11 +107,110 @@
           <button id="btn-lang-hi" class="px-1 text-white/70 hover:text-white" type="button">हिन्दी</button>
         </div>
 
-        <!-- Notification Badge -->
-        <button class="relative p-1.5 text-white/90 hover:text-white transition-colors focus:outline-none" title="Active Triage Alerts" type="button">
-          <span class="material-symbols-outlined text-[20px]">notifications</span>
-          <span id="badge-notif-count" class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-bold leading-none text-white bg-status-red rounded-sm border border-navy">3</span>
-        </button>
+        <!-- Notification Badge & Dropdown -->
+        <div class="relative" id="notif-container">
+          <button id="btn-notif-toggle" onclick="toggleNotificationDropdown(event)" class="relative p-1.5 text-white/90 hover:text-white hover:bg-white/10 rounded-sm transition-colors focus:outline-none cursor-pointer flex items-center justify-center" title="Active Triage & Risk Alerts" type="button">
+            <span class="material-symbols-outlined text-[20px]">notifications</span>
+            <span id="badge-notif-count" class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-bold leading-none text-white bg-status-red rounded-sm border border-navy shadow-xs animate-pulse">3</span>
+          </button>
+
+          <!-- Notification Popover Drawer -->
+          <div id="notif-dropdown" class="hidden absolute right-0 top-11 w-80 sm:w-96 bg-white border border-bordercol rounded-sm shadow-2xl z-50 text-ink animate-in fade-in-0 duration-150 text-left">
+            <!-- Header -->
+            <div class="p-3 bg-navy text-white rounded-t-xs flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px] text-teal-400">notifications_active</span>
+                <span class="text-[12px] font-bold uppercase tracking-wider">
+                  Statutory Risk Alerts (<span id="notif-unread-text">3 unread</span>)
+                </span>
+              </div>
+              <button onclick="markAllNotificationsRead(event)" type="button" class="text-[11px] text-teal-300 hover:text-white flex items-center gap-1 font-semibold cursor-pointer">
+                <span class="material-symbols-outlined text-[14px]">done_all</span>
+                <span>Mark all read</span>
+              </button>
+            </div>
+
+            <!-- Notification Items List -->
+            <div id="notif-list" class="divide-y divide-bordercol max-h-80 overflow-y-auto">
+              <!-- Alert 1 -->
+              <div onclick="handleNotifClick('MPL-2024-14205', this)" class="p-3 hover:bg-canvas cursor-pointer transition-colors space-y-1 bg-amber-50/40 notif-item unread">
+                <div class="flex items-center justify-between">
+                  <span class="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded-xs font-mono bg-red-100 text-status-red border border-status-red/30">
+                    CRITICAL
+                  </span>
+                  <span class="text-[10px] text-slate-500 font-mono">10 mins ago</span>
+                </div>
+                <h5 class="text-[12px] font-bold text-navy flex items-center justify-between">
+                  <span>Cost Variance Anomaly (+142%)</span>
+                  <span class="w-2 h-2 rounded-full bg-status-red notif-dot"></span>
+                </h5>
+                <p class="text-[11px] text-slate-600 leading-snug">
+                  Project MPL-2024-14205 flagged for expenditure exceeding district peer median by +142%.
+                </p>
+                <div class="pt-1 flex items-center justify-between text-[10px] font-mono text-primary font-semibold">
+                  <span>Ref: MPL-2024-14205</span>
+                  <span class="flex items-center gap-0.5 text-primary hover:underline">
+                    View Dossier →
+                  </span>
+                </div>
+              </div>
+
+              <!-- Alert 2 -->
+              <div onclick="handleNotifClick('MPL-2024-14205', this)" class="p-3 hover:bg-canvas cursor-pointer transition-colors space-y-1 bg-amber-50/40 notif-item unread">
+                <div class="flex items-center justify-between">
+                  <span class="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded-xs font-mono bg-amber-100 text-amber-800 border border-amber-300">
+                    WARNING
+                  </span>
+                  <span class="text-[10px] text-slate-500 font-mono">35 mins ago</span>
+                </div>
+                <h5 class="text-[12px] font-bold text-navy flex items-center justify-between">
+                  <span>Sentinel-2 Spatial Offset (490m)</span>
+                  <span class="w-2 h-2 rounded-full bg-status-red notif-dot"></span>
+                </h5>
+                <p class="text-[11px] text-slate-600 leading-snug">
+                  Satellite observation detected structural footprint outside 100m sanctioned AOI buffer.
+                </p>
+                <div class="pt-1 flex items-center justify-between text-[10px] font-mono text-primary font-semibold">
+                  <span>Ref: Sentinel-2 L2A BOA</span>
+                  <span class="flex items-center gap-0.5 text-primary hover:underline">
+                    Inspect Geometry →
+                  </span>
+                </div>
+              </div>
+
+              <!-- Alert 3 -->
+              <div onclick="handleNotifClick('MPL-2024-14205', this)" class="p-3 hover:bg-canvas cursor-pointer transition-colors space-y-1 bg-amber-50/40 notif-item unread">
+                <div class="flex items-center justify-between">
+                  <span class="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded-xs font-mono bg-red-100 text-status-red border border-status-red/30">
+                    CRITICAL
+                  </span>
+                  <span class="text-[10px] text-slate-500 font-mono">2 hours ago</span>
+                </div>
+                <h5 class="text-[12px] font-bold text-navy flex items-center justify-between">
+                  <span>Cross-Scheme Double Claim (82%)</span>
+                  <span class="w-2 h-2 rounded-full bg-status-red notif-dot"></span>
+                </h5>
+                <p class="text-[11px] text-slate-600 leading-snug">
+                  Correlating claim found under MGNREGA on identical geographic coordinates.
+                </p>
+                <div class="pt-1 flex items-center justify-between text-[10px] font-mono text-primary font-semibold">
+                  <span>Ref: MGNREGA-MH-9021</span>
+                  <span class="flex items-center gap-0.5 text-primary hover:underline">
+                    Cross-Verify →
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-2.5 bg-canvas border-t border-bordercol rounded-b-xs text-center">
+              <button onclick="viewAllQueueAlerts()" type="button" class="text-[12px] font-bold text-primary hover:text-navy inline-flex items-center gap-1 cursor-pointer">
+                <span>Open Full Investigation Queue (14 Active Flags)</span>
+                <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Officer Profile Strip -->
         <div id="officer-profile-strip" class="flex items-center gap-2.5 pl-3 border-l border-white/20">
@@ -1960,6 +2059,90 @@
     function triggerPdfExport() {
       window.print();
     }
+
+    function toggleNotificationDropdown(e) {
+      if (e) e.stopPropagation();
+      const dd = document.getElementById('notif-dropdown');
+      if (dd) {
+        dd.classList.toggle('hidden');
+      }
+    }
+
+    function markAllNotificationsRead(e) {
+      if (e) e.stopPropagation();
+      const badge = document.getElementById('badge-notif-count');
+      const unreadText = document.getElementById('notif-unread-text');
+      const dots = document.querySelectorAll('.notif-dot');
+      const items = document.querySelectorAll('.notif-item');
+
+      if (badge) badge.classList.add('hidden');
+      if (unreadText) unreadText.textContent = '0 unread';
+      dots.forEach(d => d.classList.add('hidden'));
+      items.forEach(i => {
+        i.classList.remove('bg-amber-50/40');
+        i.classList.add('bg-white');
+      });
+    }
+
+    function handleNotifClick(projectId, el) {
+      const dd = document.getElementById('notif-dropdown');
+      if (dd) dd.classList.add('hidden');
+
+      if (el) {
+        el.classList.remove('bg-amber-50/40');
+        el.classList.add('bg-white');
+        const dot = el.querySelector('.notif-dot');
+        if (dot) dot.classList.add('hidden');
+      }
+
+      // Update remaining count
+      const remaining = document.querySelectorAll('.notif-dot:not(.hidden)').length;
+      const badge = document.getElementById('badge-notif-count');
+      const unreadText = document.getElementById('notif-unread-text');
+      if (badge) {
+        if (remaining > 0) {
+          badge.textContent = remaining;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+      if (unreadText) unreadText.textContent = `${remaining} unread`;
+
+      // Switch to official workspace if on public landing, and open the dossier
+      switchToOfficialWorkspace();
+      openProjectDossier(projectId);
+
+      const dossier = document.getElementById('section-dossier') || document.getElementById('section-manifest');
+      if (dossier) {
+        setTimeout(() => dossier.scrollIntoView({ behavior: 'smooth' }), 100);
+      }
+    }
+
+    function viewAllQueueAlerts() {
+      const dd = document.getElementById('notif-dropdown');
+      if (dd) dd.classList.add('hidden');
+
+      switchToOfficialWorkspace();
+      const filter = document.getElementById('table-risk-filter');
+      if (filter) {
+        filter.value = 'HIGH';
+        applyFilters();
+      }
+      const table = document.getElementById('section-table') || document.getElementById('section-manifest');
+      if (table) {
+        setTimeout(() => table.scrollIntoView({ behavior: 'smooth' }), 100);
+      }
+    }
+
+    // Close notification dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const notifContainer = document.getElementById('notif-container');
+      const notifDropdown = document.getElementById('notif-dropdown');
+      if (notifContainer && notifDropdown && !notifContainer.contains(e.target)) {
+        notifDropdown.classList.add('hidden');
+      }
+    });
 
     function setupEventListeners() {
       document.getElementById('btn-export-csv')?.addEventListener('click', triggerCsvExport);
