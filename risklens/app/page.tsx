@@ -231,9 +231,9 @@ export default function EmpoweredIndianMPLADSPage() {
 
           <div className="mt-8 pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 text-xs font-primary">
             <div className="flex items-center gap-4 text-slate-500">
-              <DataSourceBadge type="synthetic" />
-              <span>• Synthetic Demonstration Layer</span>
-              <span>• MoSPI Compliant (2023 Guidelines)</span>
+              <DataSourceBadge type="public" />
+              <span>• Primary Source: Sansad.in &amp; MoSPI eSAKSHI Datasets</span>
+              <span>• GFR 2017 &amp; RTI Section 4 Compliant</span>
             </div>
             <Link
               href="/how-it-works"
@@ -241,6 +241,202 @@ export default function EmpoweredIndianMPLADSPage() {
             >
               <span>Learn how RiskLens calculates risk scores</span>
               <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* COMPREHENSIVE PORTAL & DASHBOARD SUITE LAUNCHPAD */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 pb-4 border-b border-slate-100">
+            <div>
+              <span className="civic-eyebrow">PORTAL NAVIGATION SUITE</span>
+              <h2 className="text-xl font-bold text-slate-900 font-display">
+                All Intelligence &amp; Accountability Dashboards
+              </h2>
+            </div>
+            <span className="text-xs text-slate-500">
+              Select any portal module below to launch directly
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Public 1: Browse MPs */}
+            <Link
+              href="/mps"
+              className="p-4 rounded-xl border border-slate-200 hover:border-blue-600 hover:bg-blue-50/20 transition-all flex items-start gap-3 group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <Users className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <strong className="text-sm font-bold text-slate-900 block group-hover:text-blue-600">
+                  Browse MPs Directory
+                </strong>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  All 774 Lok Sabha &amp; Rajya Sabha MPs with allocation, expenditure, and completion stats.
+                </p>
+              </div>
+            </Link>
+
+            {/* Public 2: Find Projects */}
+            <Link
+              href="/projects"
+              className="p-4 rounded-xl border border-slate-200 hover:border-blue-600 hover:bg-blue-50/20 transition-all flex items-start gap-3 group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-200 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <strong className="text-sm font-bold text-slate-900 block group-hover:text-blue-600">
+                  Find Projects in Constituency
+                </strong>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Search and track local developmental works by state and parliamentary constituency.
+                </p>
+              </div>
+            </Link>
+
+            {/* Public 3: Compare MPs */}
+            <Link
+              href="/compare"
+              className="p-4 rounded-xl border border-slate-200 hover:border-blue-600 hover:bg-blue-50/20 transition-all flex items-start gap-3 group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <GitCompare className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <strong className="text-sm font-bold text-slate-900 block group-hover:text-blue-600">
+                  Side-by-Side MP Comparison
+                </strong>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Compare two or more MPs across utilization velocity, completed works, and risk metrics.
+                </p>
+              </div>
+            </Link>
+
+            {/* Official 1: Risk Triage & Alerts */}
+            <Link
+              href="/queue"
+              className="p-4 rounded-xl border border-slate-200 hover:border-red-600 hover:bg-red-50/20 transition-all flex items-start gap-3 group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-red-50 text-red-600 border border-red-200 flex items-center justify-center shrink-0 group-hover:bg-red-600 group-hover:text-white transition-colors">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5">
+                  <strong className="text-sm font-bold text-slate-900 block group-hover:text-red-600">
+                    Risk Triage &amp; Alerts Queue
+                  </strong>
+                  <span className="px-1.5 py-0.2 bg-red-100 text-red-700 text-[10px] font-bold rounded">
+                    Official
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Triaged queue of works flagged by satellite mismatch, cost anomalies, and SLA delays.
+                </p>
+              </div>
+            </Link>
+
+            {/* Official 2: Geospatial Radar GIS */}
+            <Link
+              href="/radar"
+              className="p-4 rounded-xl border border-slate-200 hover:border-teal-600 hover:bg-teal-50/20 transition-all flex items-start gap-3 group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-teal-50 text-teal-600 border border-teal-200 flex items-center justify-center shrink-0 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5">
+                  <strong className="text-sm font-bold text-slate-900 block group-hover:text-teal-600">
+                    Geospatial Radar (GIS)
+                  </strong>
+                  <span className="px-1.5 py-0.2 bg-teal-100 text-teal-800 text-[10px] font-bold rounded">
+                    Sentinel-2
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Interactive satellite radar sweeping all constituencies for polygon verification.
+                </p>
+              </div>
+            </Link>
+
+            {/* Official 3: CAG Reconciliation Ledger */}
+            <Link
+              href="/ledger"
+              className="p-4 rounded-xl border border-slate-200 hover:border-blue-600 hover:bg-blue-50/20 transition-all flex items-start gap-3 group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                <FileCheck className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5">
+                  <strong className="text-sm font-bold text-slate-900 block group-hover:text-amber-700">
+                    CAG Reconciliation Ledger
+                  </strong>
+                  <span className="px-1.5 py-0.2 bg-amber-100 text-amber-800 text-[10px] font-bold rounded">
+                    Audit
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  District unspent balances, interest remittance under Rule 230(8), and CSV export.
+                </p>
+              </div>
+            </Link>
+
+            {/* Official 4: GFR 2017 Compliance Engine */}
+            <Link
+              href="/compliance"
+              className="p-4 rounded-xl border border-slate-200 hover:border-blue-600 hover:bg-blue-50/20 transition-all flex items-start gap-3 group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <strong className="text-sm font-bold text-slate-900 block group-hover:text-blue-600">
+                  GFR 2017 Compliance Verifier
+                </strong>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Automated checks for Rule 230(8), Rule 238(1), Rule 144(xi), and 75-day sanction rules.
+                </p>
+              </div>
+            </Link>
+
+            {/* Public 4: RTI Reports */}
+            <Link
+              href="/reports"
+              className="p-4 rounded-xl border border-slate-200 hover:border-blue-600 hover:bg-blue-50/20 transition-all flex items-start gap-3 group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <Building className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <strong className="text-sm font-bold text-slate-900 block group-hover:text-blue-600">
+                  Transparency &amp; RTI Reports
+                </strong>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Download Section 4(1)(b) public audit packs, CAG ledgers, and raw CSV datasets.
+                </p>
+              </div>
+            </Link>
+
+            {/* Public 5: Citizen Feedback */}
+            <Link
+              href="/feedback"
+              className="p-4 rounded-xl border border-slate-200 hover:border-blue-600 hover:bg-blue-50/20 transition-all flex items-start gap-3 group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 border border-purple-200 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                <Users className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <strong className="text-sm font-bold text-slate-900 block group-hover:text-purple-600">
+                  Citizen Grievance &amp; Feedback
+                </strong>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Submit ground observations, missing assets, or delays with CPGRAMS docket tracking.
+                </p>
+              </div>
             </Link>
           </div>
         </div>

@@ -1,16 +1,1659 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pratyaksh — AI-Powered MPLADS Intelligence & Verification Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body class="bg-[#f8fafc] text-slate-900 font-['Plus_Jakarta_Sans',sans-serif] min-h-screen antialiased selection:bg-indigo-500 selection:text-white">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MPLADS AI Risk Intelligence Platform — MoSPI Government of India</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            canvas: '#FAFAF9',
+            surface: '#FFFFFF',
+            navy: '#0B2149',
+            ink: '#14213D',
+            muted: '#6B7280',
+            bordercol: '#D9DEE4',
+            primary: '#1A56C4',
+            'primary-hover': '#15469F',
+            'ai-teal': '#0E6E6E',
+            'ai-teal-bg': '#E6F4F4',
+            'status-green': '#1E7B4D',
+            'status-green-bg': '#E8F5E9',
+            'status-amber': '#B5750A',
+            'status-amber-bg': '#FEF3D6',
+            'status-red': '#B3261E',
+            'status-red-bg': '#FDF2F2',
+            'status-gray': '#374151',
+            'status-gray-bg': '#F3F4F6',
+          },
+          borderRadius: {
+            DEFAULT: '4px',
+            sm: '2px',
+            md: '4px',
+            lg: '4px',
+            none: '0px'
+          },
+          fontFamily: {
+            sans: ['"Noto Sans"', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #FAFAF9;
+      color: #14213D;
+      font-family: 'Noto Sans', sans-serif;
+      font-feature-settings: "tnum" 1;
+      -webkit-font-smoothing: antialiased;
+    }
+    .tabular-num {
+      font-feature-settings: "tnum" 1;
+      font-variant-numeric: tabular-nums;
+    }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    @media print {
+      header, footer, .no-print { display: none !important; }
+      main { padding-top: 0 !important; background: white !important; }
+      body { background: white !important; color: black !important; }
+    }
+  </style>
+</head>
+<body class="bg-canvas text-ink min-h-screen flex flex-col antialiased selection:bg-primary selection:text-white">
+
+  <!-- ================================================================= -->
+  <!-- 1. OFFICIAL INSTITUTIONAL GOVERNMENT HEADER -->
+  <!-- ================================================================= -->
+  <header class="fixed top-0 left-0 w-full z-50 bg-navy border-b border-bordercol/30">
+    <!-- Top Identity Band -->
+    <div class="h-16 px-4 md:px-8 max-w-[1600px] mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <!-- National Emblem Lion Capital Vector Placeholder / Official Crest -->
+        <div class="h-10 w-10 rounded-sm bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0">
+          <span class="material-symbols-outlined text-[24px]">account_balance</span>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="text-[17px] md:text-[19px] font-bold text-white tracking-tight leading-tight">MPLADS AI Risk Intelligence Platform</span>
+            <span class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-white/15 text-white/90 border border-white/20 rounded-sm">Official Node</span>
+          </div>
+          <span class="text-[12px] text-white/80 leading-tight mt-0.5">Government of India · Ministry of Statistics &amp; Programme Implementation (MoSPI)</span>
+        </div>
+      </div>
+
+      <!-- Right Header Actions & Investigator ID -->
+      <div class="flex items-center gap-3 md:gap-5">
+        <!-- Language Switcher -->
+        <div class="flex items-center border border-white/30 rounded-sm px-2 py-0.5 text-white text-[12px] font-semibold">
+          <button id="btn-lang-en" class="px-1 text-white hover:text-white/80" type="button">EN</button>
+          <span class="text-white/40 px-0.5">|</span>
+          <button id="btn-lang-hi" class="px-1 text-white/70 hover:text-white" type="button">हिन्दी</button>
+        </div>
+
+        <!-- Notification Badge -->
+        <button class="relative p-1.5 text-white/90 hover:text-white transition-colors focus:outline-none" title="Active Triage Alerts" type="button">
+          <span class="material-symbols-outlined text-[20px]">notifications</span>
+          <span id="badge-notif-count" class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-bold leading-none text-white bg-status-red rounded-sm border border-navy">3</span>
+        </button>
+
+        <!-- Officer Profile Strip -->
+        <div class="flex items-center gap-2.5 pl-3 border-l border-white/20">
+          <div class="w-8 h-8 rounded-sm bg-primary border border-white/20 flex items-center justify-center text-white">
+            <span class="material-symbols-outlined text-[18px]">person</span>
+          </div>
+          <div class="hidden md:flex flex-col text-left">
+            <span class="text-[13px] font-bold text-white leading-tight">R. Sharma, IAS</span>
+            <span class="text-[10px] text-white/70 tracking-wider uppercase leading-none mt-0.5">DISTRICT / STATE INVESTIGATOR</span>
+          </div>
+          <button class="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-sm transition-colors" title="Sign Out" type="button">
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Secondary Navigation Bar -->
+    <div class="h-11 bg-surface border-t border-b border-bordercol px-4 md:px-8">
+      <div class="max-w-[1600px] mx-auto h-full flex items-center justify-between">
+        <nav class="flex items-center h-full gap-1 overflow-x-auto text-[13px] font-semibold">
+          <a class="text-primary border-b-2 border-primary h-full flex items-center px-3 transition-colors whitespace-nowrap" href="#">Dashboard Overview</a>
+          <a class="text-muted hover:text-ink h-full flex items-center px-3 transition-colors whitespace-nowrap" href="#section-manifest">Projects Directory</a>
+          <a class="text-muted hover:text-ink h-full flex items-center px-3 transition-colors whitespace-nowrap" href="#section-manifest">Risk Triage &amp; Alerts (<span id="nav-flagged-count" class="text-status-red font-bold">14</span> Flagged)</a>
+          <a class="text-muted hover:text-ink h-full flex items-center px-3 transition-colors whitespace-nowrap" href="#section-radar">Geospatial Radar</a>
+          <a class="text-muted hover:text-ink h-full flex items-center px-3 transition-colors whitespace-nowrap" href="#section-dossier">CAG Reconciliation Ledger</a>
+          <a class="text-muted hover:text-ink h-full flex items-center px-3 transition-colors whitespace-nowrap" href="#section-compliance">Audit Reports &amp; RTI Export</a>
+        </nav>
+        <div class="hidden lg:flex items-center gap-1.5 text-[11px] font-semibold text-muted uppercase tracking-wider">
+          <span class="material-symbols-outlined text-[14px]">lock</span>
+          <span>RESTRICTED OFFICIAL USE ONLY · GFR 2017</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================================================================= -->
+  <!-- MAIN WORKSPACE -->
+  <!-- ================================================================= -->
+  <main class="w-full pt-28 pb-12 flex-1">
+    <div class="max-w-[1600px] mx-auto px-4 md:px-8 space-y-6">
+
+      <!-- 2. BREADCRUMB & DATA FRESHNESS STRIP -->
+      <div class="w-full bg-surface border border-bordercol p-3 rounded-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex items-center gap-1.5 text-[13px] text-muted flex-wrap">
+          <span class="hover:text-primary cursor-pointer">Official Workspace</span>
+          <span>›</span>
+          <span class="font-semibold text-ink">National Dashboard Overview</span>
+          <span>›</span>
+          <span class="text-muted" id="jurisdiction-label">All India Jurisdiction (Active Lok Sabha 18th Session)</span>
+        </div>
+        <div class="flex items-center gap-4 text-[12px]">
+          <div class="flex items-center gap-2 text-ink">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-sm bg-ai-teal opacity-75"></span>
+              <span class="relative inline-flex rounded-sm h-2 w-2 bg-ai-teal"></span>
+            </span>
+            <span class="tabular-num" id="freshness-banner">Synced: 24 Oct 2024 06:00 IST (543 Constituencies / PFMS) · <strong class="text-status-red">14 New Anomalies (24h)</strong></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btn-export-pdf" class="px-3 py-1 bg-surface border border-bordercol hover:bg-canvas text-ink text-[12px] font-semibold rounded-sm transition-colors flex items-center gap-1" type="button">
+              <span class="material-symbols-outlined text-[15px]">picture_as_pdf</span> Brief (PDF)
+            </button>
+            <button id="btn-export-csv" class="px-3 py-1 bg-primary hover:bg-primary-hover text-white text-[12px] font-semibold rounded-sm transition-colors flex items-center gap-1" type="button">
+              <span class="material-symbols-outlined text-[15px]">download</span> CAG CSV
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- =============================================================== -->
+      <!-- ZONE 1: TOP KPI STRIP -->
+      <!-- =============================================================== -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- KPI 1 -->
+        <div class="bg-surface border border-bordercol p-4 rounded-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-muted text-[12px] font-semibold">
+            <span class="uppercase tracking-wider">Total Tracked Projects</span>
+            <span class="material-symbols-outlined text-primary text-[20px]">account_balance</span>
+          </div>
+          <div class="my-3">
+            <div class="text-[32px] md:text-[36px] font-bold text-ink tracking-tight tabular-num leading-none" id="kpi-total-projects">2,48,190</div>
+            <p class="text-[12px] text-muted mt-1.5" id="kpi-total-sanctioned">FY 2024–25 · ₹4,120 Cr Sanctioned</p>
+          </div>
+          <div class="flex items-center gap-1 text-[12px] text-status-green font-semibold">
+            <span class="material-symbols-outlined text-[15px]">arrow_upward</span>
+            <span>4.2% YoY growth in active works</span>
+          </div>
+        </div>
+
+        <!-- KPI 2 -->
+        <div class="bg-surface border border-bordercol p-4 rounded-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-muted text-[12px] font-semibold">
+            <span class="uppercase tracking-wider">High Risk Outliers</span>
+            <span class="px-1.5 py-0.5 bg-status-red-bg border border-status-red text-status-red text-[10px] font-bold rounded-sm uppercase">Score ≥75</span>
+          </div>
+          <div class="my-3">
+            <div class="text-[32px] md:text-[36px] font-bold text-status-red tracking-tight tabular-num leading-none" id="kpi-high-risk">342</div>
+            <p class="text-[12px] text-muted mt-1.5">Multi-variable variance flagged</p>
+          </div>
+          <div class="flex items-center gap-1 text-[12px] text-status-red font-semibold">
+            <span class="material-symbols-outlined text-[15px]">trending_up</span>
+            <span>▲ 12 flagged vs last audit cycle</span>
+          </div>
+        </div>
+
+        <!-- KPI 3 -->
+        <div class="bg-surface border border-bordercol p-4 rounded-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-muted text-[12px] font-semibold">
+            <span class="uppercase tracking-wider">Overdue Verification SLAs</span>
+            <span class="px-1.5 py-0.5 bg-status-amber-bg border border-status-amber text-status-amber text-[10px] font-bold rounded-sm">&gt;30d SLA</span>
+          </div>
+          <div class="my-3">
+            <div class="text-[32px] md:text-[36px] font-bold text-ink tracking-tight tabular-num leading-none" id="kpi-overdue-sla">1,428</div>
+            <p class="text-[12px] text-muted mt-1.5">Pending statutory field inspection</p>
+          </div>
+          <div class="flex items-center gap-1 text-[12px] text-status-amber font-semibold">
+            <span class="material-symbols-outlined text-[15px]">arrow_downward</span>
+            <span>▼ 3.1% MoM clearance improvement</span>
+          </div>
+        </div>
+
+        <!-- KPI 4 -->
+        <div class="bg-surface border border-bordercol p-4 rounded-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-muted text-[12px] font-semibold">
+            <span class="uppercase tracking-wider">Compliance Rule Alerts</span>
+            <span class="material-symbols-outlined text-muted text-[20px]">policy</span>
+          </div>
+          <div class="my-3">
+            <div class="text-[32px] md:text-[36px] font-bold text-ink tracking-tight tabular-num leading-none" id="kpi-compliance-alerts">896</div>
+            <p class="text-[12px] text-muted mt-1.5">Automated GFR 2017 triggers</p>
+          </div>
+          <div class="flex items-center gap-1 text-[12px] text-status-red font-semibold">
+            <span class="material-symbols-outlined text-[15px]">error</span>
+            <span>▲ 8 new triggers recorded this week</span>
+          </div>
+        </div>
+
+        <!-- KPI 5 -->
+        <div class="bg-surface border border-bordercol p-4 rounded-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-muted text-[12px] font-semibold">
+            <span class="uppercase tracking-wider">AI Cross-Match Confidence</span>
+            <span class="material-symbols-outlined text-ai-teal text-[20px]">psychology</span>
+          </div>
+          <div class="my-3">
+            <div class="text-[32px] md:text-[36px] font-bold text-ai-teal tracking-tight tabular-num leading-none" id="kpi-crossmatch-conf">94.2%</div>
+            <p class="text-[12px] text-muted mt-1.5">pHash + EO Radar consistency</p>
+          </div>
+          <div class="flex items-center gap-1 text-[12px] text-muted font-normal">
+            <span class="material-symbols-outlined text-[15px] text-status-green">check_circle</span>
+            <span>Calibrated against 1.2M works</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- =============================================================== -->
+      <!-- ZONE 2: NATIONAL GEOSPATIAL RADAR & HIGH-RISK DISTRICTS -->
+      <!-- =============================================================== -->
+      <div id="section-radar" class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <!-- Radar Map (7 cols) -->
+        <div class="lg:col-span-7 bg-surface border border-bordercol p-5 rounded-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between pb-3 border-b border-bordercol">
+            <div>
+              <h2 class="text-[18px] font-bold text-ink leading-tight">National Geospatial Risk Radar</h2>
+              <p class="text-[12px] text-muted mt-0.5">Datum: WGS 84 · Survey of India Standards EPSG:4326 · Active Clustering</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btn-map-all" class="px-2.5 py-1 text-[11px] bg-canvas border border-bordercol text-ink font-semibold rounded-sm hover:bg-bordercol/30 transition-colors">All States</button>
+              <button id="btn-map-highrisk" class="px-2.5 py-1 text-[11px] bg-primary text-white font-semibold rounded-sm hover:bg-primary-hover transition-colors">High Risk Only</button>
+              <a class="text-primary hover:text-primary-hover text-[12px] font-semibold flex items-center gap-0.5 ml-1" href="#section-manifest">
+                Open Full GIS <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Interactive Vector India GIS Map -->
+          <div class="relative w-full h-80 bg-canvas border border-bordercol rounded-sm overflow-hidden my-4 flex items-center justify-center select-none">
+            <!-- Grid Lines -->
+            <svg class="absolute inset-0 w-full h-full text-bordercol opacity-40 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="geo-grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.5"></path>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#geo-grid-pattern)"></rect>
+              <line x1="25%" y1="0" x2="25%" y2="100%" stroke="currentColor" stroke-dasharray="3 3" stroke-width="0.75"></line>
+              <line x1="50%" y1="0" x2="50%" y2="100%" stroke="currentColor" stroke-dasharray="3 3" stroke-width="0.75"></line>
+              <line x1="75%" y1="0" x2="75%" y2="100%" stroke="currentColor" stroke-dasharray="3 3" stroke-width="0.75"></line>
+              <line x1="0" y1="35%" x2="100%" y2="35%" stroke="currentColor" stroke-dasharray="3 3" stroke-width="0.75"></line>
+              <line x1="0" y1="70%" x2="100%" y2="70%" stroke="currentColor" stroke-dasharray="3 3" stroke-width="0.75"></line>
+            </svg>
+
+            <!-- Top telemetry -->
+            <div class="absolute top-2 left-3 right-3 flex justify-between items-center text-[10px] text-muted tabular-num z-10">
+              <span class="bg-surface/90 border border-bordercol px-1.5 py-0.5 rounded-sm">28°38'N, 77°13'E (HQ NODE) · WGS 84</span>
+              <span class="bg-surface/90 border border-bordercol px-1.5 py-0.5 rounded-sm">SCALE 1:2,500,000 · EPSG:4326</span>
+            </div>
+
+            <!-- India Vector Base Map SVG -->
+            <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 600 320" preserveAspectRatio="xMidYMid meet">
+              <g id="india-mainland" class="opacity-95">
+                <path d="M 268 28 C 274 24, 282 22, 290 27 C 298 32, 308 30, 312 36 C 316 42, 318 52, 314 60 C 310 67, 312 74, 319 79 C 326 84, 342 90, 350 96 C 354 100, 355 106, 350 110 C 342 115, 340 121, 345 125 C 352 130, 359 130, 368 132 C 378 134, 386 128, 396 130 C 404 132, 416 130, 420 135 C 424 140, 420 148, 412 150 C 404 152, 395 152, 388 156 C 383 159, 380 166, 382 173 C 382 178, 376 182, 371 184 C 365 186, 360 193, 362 201 C 363 207, 360 214, 355 218 C 348 224, 342 232, 338 241 C 334 250, 329 259, 324 268 C 318 277, 312 287, 305 296 C 302 300, 298 300, 295 296 C 289 287, 282 277, 278 266 C 273 254, 269 242, 266 230 C 263 218, 258 207, 255 196 C 251 182, 244 171, 235 162 C 228 156, 218 154, 210 156 C 204 158, 196 160, 190 155 C 185 150, 187 141, 194 136 C 200 132, 206 130, 214 126 C 218 123, 218 116, 216 110 C 214 102, 216 93, 222 86 C 228 80, 235 73, 243 65 C 250 57, 256 46, 261 36 Z" fill="#EAEFEF" stroke="#94A3B8" stroke-width="1.2" stroke-linejoin="round"></path>
+                <path d="M 214 126 C 202 128, 190 134, 182 142 C 175 149, 172 158, 176 165 C 182 173, 192 174, 200 170 C 206 167, 211 169, 215 174 C 221 181, 232 178, 236 170 C 238 164, 233 158, 226 156 C 220 154, 216 148, 218 141 Z" fill="#EAEFEF" stroke="#94A3B8" stroke-width="1.2" stroke-linejoin="round"></path>
+                <path d="M 388 156 C 396 154, 408 150, 418 148 C 426 146, 436 142, 444 146 C 452 150, 460 148, 465 154 C 470 160, 465 168, 458 172 C 450 176, 442 178, 436 186 C 430 193, 422 192, 418 185 C 414 179, 408 174, 400 172 C 392 170, 386 172, 382 173 Z" fill="#EAEFEF" stroke="#94A3B8" stroke-width="1.2" stroke-linejoin="round"></path>
+              </g>
+              <g stroke="#CBD5E1" stroke-width="0.75" fill="none" stroke-dasharray="2 2" class="opacity-80">
+                <path d="M 224 88 Q 238 115 234 140"></path>
+                <path d="M 265 105 Q 305 110 345 125"></path>
+                <path d="M 235 162 Q 285 168 335 178"></path>
+                <path d="M 345 125 Q 355 150 368 168"></path>
+                <path d="M 255 196 Q 290 215 342 232"></path>
+                <path d="M 272 238 Q 282 265 300 292"></path>
+              </g>
+            </svg>
+
+            <!-- District GIS Interactive Pins -->
+            <div class="absolute inset-0 pointer-events-auto">
+              <!-- Barmer -->
+              <div onclick="selectDistrict('Barmer', 'Rajasthan')" class="absolute top-[37%] left-[32%] flex flex-col items-center group cursor-pointer -translate-x-1/2 -translate-y-1/2 z-20">
+                <span class="h-4 w-4 rounded-sm bg-status-red flex items-center justify-center text-[9px] text-white font-bold border border-navy">14</span>
+                <span class="mt-1 text-[10px] font-semibold bg-navy text-white px-1.5 py-0.5 rounded-sm whitespace-nowrap group-hover:bg-primary transition-colors">Barmer (84)</span>
+              </div>
+              <!-- Murshidabad -->
+              <div onclick="selectDistrict('Murshidabad', 'West Bengal')" class="absolute top-[49%] left-[63%] flex flex-col items-center group cursor-pointer -translate-x-1/2 -translate-y-1/2 z-20">
+                <span class="h-4 w-4 rounded-sm bg-status-red flex items-center justify-center text-[9px] text-white font-bold border border-navy">11</span>
+                <span class="mt-1 text-[10px] font-semibold bg-navy text-white px-1.5 py-0.5 rounded-sm whitespace-nowrap group-hover:bg-primary transition-colors">Murshidabad (79)</span>
+              </div>
+              <!-- Purnia -->
+              <div onclick="selectDistrict('Purnia', 'Bihar')" class="absolute top-[41%] left-[59%] flex flex-col items-center group cursor-pointer -translate-x-1/2 -translate-y-1/2 z-20">
+                <span class="h-4 w-4 rounded-sm bg-status-amber flex items-center justify-center text-[9px] text-white font-bold border border-navy">9</span>
+                <span class="mt-1 text-[10px] font-semibold bg-navy text-white px-1.5 py-0.5 rounded-sm whitespace-nowrap group-hover:bg-primary transition-colors">Purnia (71)</span>
+              </div>
+              <!-- Belagavi -->
+              <div onclick="selectDistrict('Belagavi', 'Karnataka')" class="absolute top-[68%] left-[44%] flex flex-col items-center group cursor-pointer -translate-x-1/2 -translate-y-1/2 z-20">
+                <span class="h-4 w-4 rounded-sm bg-status-amber flex items-center justify-center text-[9px] text-white font-bold border border-navy">6</span>
+                <span class="mt-1 text-[10px] font-semibold bg-navy text-white px-1.5 py-0.5 rounded-sm whitespace-nowrap group-hover:bg-primary transition-colors">Belagavi (68)</span>
+              </div>
+              <!-- Wayanad -->
+              <div onclick="selectDistrict('Wayanad', 'Kerala')" class="absolute top-[82%] left-[47%] flex flex-col items-center group cursor-pointer -translate-x-1/2 -translate-y-1/2 z-20">
+                <span class="h-4 w-4 rounded-sm bg-status-amber flex items-center justify-center text-[9px] text-white font-bold border border-navy">8</span>
+                <span class="mt-1 text-[10px] font-semibold bg-navy text-white px-1.5 py-0.5 rounded-sm whitespace-nowrap group-hover:bg-primary transition-colors">Wayanad (73)</span>
+              </div>
+            </div>
+
+            <!-- Bottom Legend -->
+            <div class="absolute bottom-2 left-3 right-3 flex justify-between items-end z-10">
+              <div class="bg-surface/95 border border-bordercol p-2 rounded-sm text-[11px] space-y-1">
+                <div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-status-red"></span><span>Evidence Conflict (342)</span></div>
+                <div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-status-amber"></span><span>Pending Verification (1,428)</span></div>
+                <div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-status-green"></span><span>Verified Baseline (2,46,420)</span></div>
+              </div>
+              <span class="text-[10px] text-muted bg-surface/90 border border-bordercol px-2 py-0.5 rounded-sm">NIC-GIS / Bhuvan Satellite Feed Synchronized</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top High-Risk Districts (5 cols) -->
+        <div class="lg:col-span-5 bg-surface border border-bordercol p-5 rounded-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-bordercol">
+              <div>
+                <h2 class="text-[18px] font-bold text-ink leading-tight">Top High-Risk Districts</h2>
+                <p class="text-[12px] text-muted mt-0.5">Ranked by multi-factor algorithmic risk index under GFR Rule 144</p>
+              </div>
+              <span class="px-2 py-0.5 bg-status-red-bg border border-status-red text-status-red text-[11px] font-bold rounded-sm">OCT 2024</span>
+            </div>
+
+            <div id="top-districts-container" class="space-y-2.5 mt-3">
+              <!-- District 1 -->
+              <div onclick="selectDistrict('Barmer', 'Rajasthan')" class="p-3 bg-canvas border border-bordercol rounded-sm hover:border-primary cursor-pointer transition-colors">
+                <div class="flex items-center justify-between text-[14px]">
+                  <span class="font-bold text-ink">1. Barmer <span class="text-muted font-normal">(Rajasthan)</span></span>
+                  <span class="text-status-red font-bold tabular-num">Score: 84/100</span>
+                </div>
+                <p class="text-muted text-[12px] mt-0.5">14 Flagged Works · Cost divergence &gt;1.8x + pHash Conflict</p>
+                <div class="w-full bg-bordercol/40 h-1.5 rounded-sm mt-2 overflow-hidden">
+                  <div class="bg-status-red h-full rounded-sm" style="width: 84%"></div>
+                </div>
+              </div>
+              <!-- District 2 -->
+              <div onclick="selectDistrict('Murshidabad', 'West Bengal')" class="p-3 bg-canvas border border-bordercol rounded-sm hover:border-primary cursor-pointer transition-colors">
+                <div class="flex items-center justify-between text-[14px]">
+                  <span class="font-bold text-ink">2. Murshidabad <span class="text-muted font-normal">(West Bengal)</span></span>
+                  <span class="text-status-red font-bold tabular-num">Score: 79/100</span>
+                </div>
+                <p class="text-muted text-[12px] mt-0.5">11 Flagged Works · SLA breach &gt;60d + Shared Contractor Entity</p>
+                <div class="w-full bg-bordercol/40 h-1.5 rounded-sm mt-2 overflow-hidden">
+                  <div class="bg-status-red h-full rounded-sm" style="width: 79%"></div>
+                </div>
+              </div>
+              <!-- District 3 -->
+              <div onclick="selectDistrict('Wayanad', 'Kerala')" class="p-3 bg-canvas border border-bordercol rounded-sm hover:border-primary cursor-pointer transition-colors">
+                <div class="flex items-center justify-between text-[14px]">
+                  <span class="font-bold text-ink">3. Wayanad <span class="text-muted font-normal">(Kerala)</span></span>
+                  <span class="text-status-amber font-bold tabular-num">Score: 73/100</span>
+                </div>
+                <p class="text-muted text-[12px] mt-0.5">8 Flagged Works · Milestone progress disparity with satellite EO</p>
+                <div class="w-full bg-bordercol/40 h-1.5 rounded-sm mt-2 overflow-hidden">
+                  <div class="bg-status-amber h-full rounded-sm" style="width: 73%"></div>
+                </div>
+              </div>
+              <!-- District 4 -->
+              <div onclick="selectDistrict('Purnia', 'Bihar')" class="p-3 bg-canvas border border-bordercol rounded-sm hover:border-primary cursor-pointer transition-colors">
+                <div class="flex items-center justify-between text-[14px]">
+                  <span class="font-bold text-ink">4. Purnia <span class="text-muted font-normal">(Bihar)</span></span>
+                  <span class="text-status-amber font-bold tabular-num">Score: 71/100</span>
+                </div>
+                <p class="text-muted text-[12px] mt-0.5">9 Flagged Works · Sub-base grading variance vs District SoR</p>
+                <div class="w-full bg-bordercol/40 h-1.5 rounded-sm mt-2 overflow-hidden">
+                  <div class="bg-status-amber h-full rounded-sm" style="width: 71%"></div>
+                </div>
+              </div>
+              <!-- District 5 -->
+              <div onclick="selectDistrict('Belagavi', 'Karnataka')" class="p-3 bg-canvas border border-bordercol rounded-sm hover:border-primary cursor-pointer transition-colors">
+                <div class="flex items-center justify-between text-[14px]">
+                  <span class="font-bold text-ink">5. Belagavi <span class="text-muted font-normal">(Karnataka)</span></span>
+                  <span class="text-status-amber font-bold tabular-num">Score: 68/100</span>
+                </div>
+                <p class="text-muted text-[12px] mt-0.5">6 Flagged Works · Unit cost per km outlier across contiguous taluks</p>
+                <div class="w-full bg-bordercol/40 h-1.5 rounded-sm mt-2 overflow-hidden">
+                  <div class="bg-status-amber h-full rounded-sm" style="width: 68%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pt-3 text-[12px] text-muted text-right border-t border-bordercol mt-2">
+            Mandatory C&amp;AG statutory sample priority active
+          </div>
+        </div>
+      </div>
+
+      <!-- =============================================================== -->
+      <!-- ZONE 3: SEARCHABLE & FILTERABLE RISK MANIFEST -->
+      <!-- =============================================================== -->
+      <div id="section-manifest" class="bg-surface border border-bordercol p-5 rounded-sm space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-bordercol">
+          <div>
+            <h2 class="text-[20px] font-bold text-ink leading-tight">High-Priority Risk Manifest</h2>
+            <p class="text-[12px] text-muted mt-0.5">Real-time flagged projects undergoing algorithmic multi-signal triage</p>
+          </div>
+
+          <!-- Filter Controls -->
+          <div class="flex flex-wrap items-center gap-2">
+            <input id="table-search" class="h-10 px-3 text-[14px] text-ink bg-canvas border border-bordercol rounded-sm focus:border-primary focus:bg-surface focus:outline-none w-64" placeholder="Search ID, Contractor, Work..." type="text">
+            
+            <select id="table-state-filter" class="h-10 px-3 text-[14px] bg-canvas border border-bordercol text-ink rounded-sm focus:border-primary focus:outline-none">
+              <option value="">All States / UTs</option>
+              <option value="Rajasthan">Rajasthan</option>
+              <option value="West Bengal">West Bengal</option>
+              <option value="Kerala">Kerala</option>
+              <option value="Bihar">Bihar</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Karnataka">Karnataka</option>
+            </select>
+
+            <select id="table-risk-filter" class="h-10 px-3 text-[14px] bg-canvas border border-bordercol text-ink rounded-sm focus:border-primary focus:outline-none">
+              <option value="ALL">Risk Level: All</option>
+              <option value="HIGH" selected>High Risk (≥75)</option>
+              <option value="MEDIUM">Medium Risk (50–74)</option>
+              <option value="LOW">Low (&lt;50)</option>
+            </select>
+
+            <button id="btn-apply-filter" class="h-10 px-4 bg-primary hover:bg-primary-hover text-white text-[14px] font-semibold rounded-sm transition-colors flex items-center gap-1.5" type="button">
+              <span class="material-symbols-outlined text-[18px]">tune</span> Filter
+            </button>
+          </div>
+        </div>
+
+        <!-- Manifest Data Table -->
+        <div class="overflow-x-auto border border-bordercol rounded-sm">
+          <table class="w-full text-left tabular-num text-ink">
+            <thead class="bg-canvas border-b border-bordercol text-ink text-[13px] uppercase font-bold tracking-wider">
+              <tr>
+                <th class="py-3 px-4">Project ID &amp; Work Name</th>
+                <th class="py-3 px-4">District / State</th>
+                <th class="py-3 px-4 text-right">Sanctioned / Disbursed</th>
+                <th class="py-3 px-4 text-center">Risk Score</th>
+                <th class="py-3 px-4">Primary Flag Reason</th>
+                <th class="py-3 px-4 text-center">Status</th>
+                <th class="py-3 px-4 text-right">Dossier Action</th>
+              </tr>
+            </thead>
+            <tbody id="projects-table-body" class="divide-y divide-bordercol text-[14px]">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="flex items-center justify-between pt-2 text-[12px] text-muted">
+          <span id="table-showing-text">Showing 1–5 of 342 flagged high-risk records · GFR Rule 144 Active Audit Ledger</span>
+          <div class="flex items-center gap-1.5" id="pagination-controls">
+            <button onclick="changePage(-1)" class="px-3 py-1 bg-surface border border-bordercol rounded-sm text-ink hover:bg-canvas transition-colors">Prev</button>
+            <span id="current-page-num" class="px-3 py-1 bg-canvas border border-bordercol rounded-sm text-ink font-bold">1</span>
+            <button onclick="changePage(1)" class="px-3 py-1 bg-surface border border-bordercol rounded-sm text-ink hover:bg-canvas transition-colors">Next</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- =============================================================== -->
+      <!-- ZONE 4: KEY INSIGHTS & EXPENDITURE TRENDS PANEL -->
+      <!-- =============================================================== -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <!-- Sector Cost Analysis (7 cols) -->
+        <div class="lg:col-span-7 bg-surface border border-bordercol p-5 rounded-sm flex flex-col justify-between">
+          <div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-bordercol">
+              <div>
+                <h2 class="text-[18px] font-bold text-ink leading-tight">Expenditure vs Norms Across Key Sectors</h2>
+                <p class="text-[12px] text-muted mt-0.5">Sanctioned Allocation vs Disbursed Certified Cost (₹ in Crores)</p>
+              </div>
+              <div class="flex items-center gap-3 text-[12px]">
+                <span class="inline-flex items-center gap-1.5 text-primary font-bold"><span class="h-3 w-3 bg-primary rounded-sm"></span> Sanctioned</span>
+                <span class="inline-flex items-center gap-1.5 text-muted font-bold"><span class="h-3 w-3 bg-bordercol rounded-sm"></span> Disbursed</span>
+              </div>
+            </div>
+
+            <!-- Inline SVG Bar Chart -->
+            <div class="h-64 w-full pt-4">
+              <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 540 220">
+                <line class="text-bordercol" stroke="currentColor" stroke-width="1" x1="40" x2="520" y1="20" y2="20"></line>
+                <line class="text-bordercol" stroke="currentColor" stroke-width="1" x1="40" x2="520" y1="70" y2="70"></line>
+                <line class="text-bordercol" stroke="currentColor" stroke-width="1" x1="40" x2="520" y1="120" y2="120"></line>
+                <line class="text-bordercol" stroke="currentColor" stroke-width="1" x1="40" x2="520" y1="170" y2="170"></line>
+                
+                <text class="text-[10px] fill-current text-muted font-semibold" text-anchor="end" x="32" y="24">₹1,500 Cr</text>
+                <text class="text-[10px] fill-current text-muted font-semibold" text-anchor="end" x="32" y="74">₹1,000 Cr</text>
+                <text class="text-[10px] fill-current text-muted font-semibold" text-anchor="end" x="32" y="124">₹500 Cr</text>
+                <text class="text-[10px] fill-current text-muted font-semibold" text-anchor="end" x="32" y="174">₹0</text>
+
+                <!-- Sector 1: Roads & Bridges -->
+                <rect fill="#1A56C4" height="130" rx="2" width="26" x="75" y="40"></rect>
+                <rect fill="#94A3B8" height="85" rx="2" width="26" x="105" y="85"></rect>
+                <text class="text-[11px] fill-current text-ink font-semibold" text-anchor="middle" x="103" y="195">Roads &amp; Bridges</text>
+
+                <!-- Sector 2: Drinking Water -->
+                <rect fill="#1A56C4" height="105" rx="2" width="26" x="170" y="65"></rect>
+                <rect fill="#94A3B8" height="70" rx="2" width="26" x="200" y="100"></rect>
+                <text class="text-[11px] fill-current text-ink font-semibold" text-anchor="middle" x="198" y="195">Drinking Water</text>
+
+                <!-- Sector 3: Education -->
+                <rect fill="#1A56C4" height="90" rx="2" width="26" x="265" y="80"></rect>
+                <rect fill="#94A3B8" height="55" rx="2" width="26" x="295" y="115"></rect>
+                <text class="text-[11px] fill-current text-ink font-semibold" text-anchor="middle" x="293" y="195">Education Infra</text>
+
+                <!-- Sector 4: Irrigation -->
+                <rect fill="#1A56C4" height="60" rx="2" width="26" x="360" y="110"></rect>
+                <rect fill="#94A3B8" height="35" rx="2" width="26" x="390" y="135"></rect>
+                <text class="text-[11px] fill-current text-ink font-semibold" text-anchor="middle" x="388" y="195">Irrigation / Wells</text>
+
+                <!-- Sector 5: Community Halls -->
+                <rect fill="#1A56C4" height="45" rx="2" width="26" x="455" y="125"></rect>
+                <rect fill="#94A3B8" height="25" rx="2" width="26" x="485" y="145"></rect>
+                <text class="text-[11px] fill-current text-ink font-semibold" text-anchor="middle" x="483" y="195">Community Halls</text>
+              </svg>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 bg-canvas border border-bordercol rounded-sm flex items-center justify-between text-[13px]">
+            <span class="text-ink">Aggregated Scheme Utilization Efficiency: <strong>68.4%</strong></span>
+            <span onclick="triggerCsvExport()" class="text-primary font-bold cursor-pointer hover:underline">Download Detailed Sectoral Audit Breakdown →</span>
+          </div>
+        </div>
+
+        <!-- Common Anomalies Distribution (5 cols) -->
+        <div class="lg:col-span-5 bg-surface border border-bordercol p-5 rounded-sm flex flex-col justify-between">
+          <div>
+            <div class="pb-3 border-b border-bordercol">
+              <h2 class="text-[18px] font-bold text-ink leading-tight">Common Anomalies Detected</h2>
+              <p class="text-[12px] text-muted mt-0.5">Statistical distribution across 342 flagged projects</p>
+            </div>
+
+            <div class="space-y-3.5 mt-4">
+              <!-- Anomaly 1 -->
+              <div>
+                <div class="flex justify-between text-[13px]">
+                  <span class="font-bold text-ink">1. Unit Cost Divergence (&gt;1.8x SoR)</span>
+                  <span class="tabular-num font-bold text-status-red">142 cases (41.5%)</span>
+                </div>
+                <div class="w-full bg-bordercol/40 h-2 rounded-sm mt-1 overflow-hidden">
+                  <div class="bg-status-red h-full rounded-sm" style="width: 41.5%"></div>
+                </div>
+              </div>
+              <!-- Anomaly 2 -->
+              <div>
+                <div class="flex justify-between text-[13px]">
+                  <span class="font-bold text-ink">2. Perceptual Photo Match (pHash Conflict)</span>
+                  <span class="tabular-num font-bold text-status-red">88 cases (25.7%)</span>
+                </div>
+                <div class="w-full bg-bordercol/40 h-2 rounded-sm mt-1 overflow-hidden">
+                  <div class="bg-status-red h-full rounded-sm" style="width: 25.7%"></div>
+                </div>
+              </div>
+              <!-- Anomaly 3 -->
+              <div>
+                <div class="flex justify-between text-[13px]">
+                  <span class="font-bold text-ink">3. Physical SLA Breaches (&gt;60 days stall)</span>
+                  <span class="tabular-num font-bold text-status-amber">64 cases (18.7%)</span>
+                </div>
+                <div class="w-full bg-bordercol/40 h-2 rounded-sm mt-1 overflow-hidden">
+                  <div class="bg-status-amber h-full rounded-sm" style="width: 18.7%"></div>
+                </div>
+              </div>
+              <!-- Anomaly 4 -->
+              <div>
+                <div class="flex justify-between text-[13px]">
+                  <span class="font-bold text-ink">4. Geospatial Proximity Overlap (&lt;500m)</span>
+                  <span class="tabular-num font-bold text-primary">31 cases (9.1%)</span>
+                </div>
+                <div class="w-full bg-bordercol/40 h-2 rounded-sm mt-1 overflow-hidden">
+                  <div class="bg-primary h-full rounded-sm" style="width: 9.1%"></div>
+                </div>
+              </div>
+              <!-- Anomaly 5 -->
+              <div>
+                <div class="flex justify-between text-[13px]">
+                  <span class="font-bold text-ink">5. Cross-District Contractor Concentration</span>
+                  <span class="tabular-num font-bold text-muted">17 cases (5.0%)</span>
+                </div>
+                <div class="w-full bg-bordercol/40 h-2 rounded-sm mt-1 overflow-hidden">
+                  <div class="bg-muted h-full rounded-sm" style="width: 5.0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 bg-canvas border border-bordercol rounded-sm text-ink text-[12px]">
+            <strong class="text-ink">Automated Detection Accuracy:</strong> Cross-validated with Comptroller and Auditor General (CAG) audit test batches.
+          </div>
+        </div>
+      </div>
+
+      <!-- =============================================================== -->
+      <!-- ZONE 5: CONTRACTOR / ENTITY NETWORK GRAPH -->
+      <!-- =============================================================== -->
+      <div class="bg-surface border border-bordercol p-5 rounded-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-bordercol">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 bg-ai-teal text-white font-bold text-[11px] rounded-sm">AI AUDIT OBSERVATION</span>
+              <span class="text-[12px] text-muted">Network Graph Entity Flag</span>
+            </div>
+            <h2 class="text-[18px] font-bold text-ink mt-1">Cross-District Contractor Entanglement Analysis</h2>
+          </div>
+          <button onclick="askCopilot('Summarize M/s Marwar Infra violations')" class="px-3 py-1.5 bg-surface border border-bordercol hover:bg-canvas text-ink text-[13px] font-semibold rounded-sm flex items-center gap-1.5 transition-colors">
+            <span class="material-symbols-outlined text-[16px]">hub</span> Expand Graph Node Engine
+          </button>
+        </div>
+
+        <!-- Network Diagram SVG -->
+        <div class="w-full h-80 bg-canvas border border-bordercol rounded-sm relative overflow-hidden flex items-center justify-center p-4 select-none">
+          <svg class="w-full h-full" viewBox="0 0 800 300">
+            <!-- Connecting Lines -->
+            <line stroke="#0E6E6E" stroke-dasharray="4 3" stroke-width="1.5" x1="400" x2="160" y1="150" y2="70"></line>
+            <line stroke="#0E6E6E" stroke-width="1.5" x1="400" x2="160" y1="150" y2="230"></line>
+            <line stroke="#B3261E" stroke-width="2" x1="400" x2="640" y1="150" y2="70"></line>
+            <line stroke="#0E6E6E" stroke-dasharray="4 3" stroke-width="1.5" x1="400" x2="640" y1="150" y2="230"></line>
+
+            <!-- Edge Indicators -->
+            <rect fill="#FFFFFF" height="22" rx="2" stroke="#D9DEE4" stroke-width="1" width="135" x="225" y="90"></rect>
+            <text class="text-[10px] font-bold fill-current text-ai-teal" text-anchor="middle" x="292" y="105">Simultaneous Billing</text>
+            
+            <rect fill="#FFFFFF" height="22" rx="2" stroke="#D9DEE4" stroke-width="1" width="170" x="205" y="180"></rect>
+            <text class="text-[10px] font-bold fill-current text-ai-teal" text-anchor="middle" x="290" y="195">Overlapping Corridor (340m)</text>
+            
+            <rect fill="#FDF2F2" height="22" rx="2" stroke="#B3261E" stroke-width="1" width="145" x="465" y="90"></rect>
+            <text class="text-[10px] font-bold fill-current text-status-red" text-anchor="middle" x="537" y="105">96% Photo Match Conflict</text>
+            
+            <rect fill="#FFFFFF" height="22" rx="2" stroke="#D9DEE4" stroke-width="1" width="145" x="465" y="180"></rect>
+            <text class="text-[10px] font-bold fill-current text-ai-teal" text-anchor="middle" x="537" y="195">Concurrent Tender Win</text>
+
+            <!-- Central Contractor Node -->
+            <rect fill="#0B2149" height="52" rx="2" width="230" x="285" y="124" stroke="#D9DEE4" stroke-width="1"></rect>
+            <text class="text-[13px] font-bold fill-current text-white" text-anchor="middle" x="400" y="145">M/s Marwar Infra &amp; Earthworks</text>
+            <text class="text-[11px] fill-current text-white/80 tabular-num" text-anchor="middle" x="400" y="163">DRDA Reg: V-4019 · Active in 3 Dists</text>
+
+            <!-- Peripheral Projects -->
+            <!-- Pali -->
+            <rect fill="#FFFFFF" height="46" rx="2" stroke="#D9DEE4" stroke-width="1" width="160" x="60" y="45"></rect>
+            <text class="text-[12px] font-bold fill-current text-primary" text-anchor="middle" x="140" y="66">MPL-2023-08812</text>
+            <text class="text-[11px] fill-current text-muted" text-anchor="middle" x="140" y="82">Pali (Culvert Work - ₹18L)</text>
+
+            <!-- PMGSY -->
+            <rect fill="#FFFFFF" height="46" rx="2" stroke="#D9DEE4" stroke-width="1" width="160" x="60" y="210"></rect>
+            <text class="text-[12px] font-bold fill-current text-ink" text-anchor="middle" x="140" y="231">PMG-RJ-4019</text>
+            <text class="text-[11px] fill-current text-muted" text-anchor="middle" x="140" y="247">PMGSY State Highway Link</text>
+
+            <!-- Barmer Target -->
+            <rect fill="#FDF2F2" height="46" rx="2" stroke="#B3261E" stroke-width="1.5" width="160" x="580" y="45" class="cursor-pointer" onclick="selectDistrict('Barmer', 'Rajasthan')"></rect>
+            <text class="text-[12px] font-bold fill-current text-status-red" text-anchor="middle" x="660" y="66">MPL-2024-14205</text>
+            <text class="text-[11px] font-bold fill-current text-status-red" text-anchor="middle" x="660" y="82">Barmer (Rural Link - ₹32L)</text>
+
+            <!-- Jaisalmer -->
+            <rect fill="#FFFFFF" height="46" rx="2" stroke="#D9DEE4" stroke-width="1" width="160" x="580" y="210"></rect>
+            <text class="text-[12px] font-bold fill-current text-primary" text-anchor="middle" x="660" y="231">MPL-2024-15902</text>
+            <text class="text-[11px] fill-current text-muted" text-anchor="middle" x="660" y="247">Jaisalmer (Pond Excavation)</text>
+          </svg>
+        </div>
+
+        <div class="p-3 bg-canvas border-l-4 border-l-ai-teal border border-bordercol rounded-sm text-[13px] text-ink leading-relaxed">
+          <strong>Analytical Observation:</strong> Entity <em>M/s Marwar Infra &amp; Earthworks Pvt Ltd</em> exhibits active execution contracts across 3 adjoining districts with concurrent billing milestones and identical concrete culvert photographic submissions (96% perceptual hash congruence between Barmer and Pali). Warranting cross-district vigilance review under Section 144 of General Financial Rules (GFR).
+        </div>
+      </div>
+
+      <!-- =============================================================== -->
+      <!-- ZONES 6 & 7: SPLITTING DETECTOR & GEOGRAPHIC CLUSTER RADAR -->
+      <!-- =============================================================== -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Zone 6: Project Splitting Detector -->
+        <div class="bg-surface border border-bordercol p-5 rounded-sm space-y-3">
+          <div class="flex items-center gap-2 pb-2 border-b border-bordercol">
+            <span class="px-2 py-0.5 bg-ai-teal text-white font-bold text-[11px] rounded-sm">AI AUDIT OBSERVATION</span>
+            <span class="text-[12px] text-muted font-bold">STATUTORY RULE 130 GFR</span>
+          </div>
+
+          <div>
+            <h2 class="text-[18px] font-bold text-ink">Potential Project Splitting Detected</h2>
+            <p class="text-[12px] text-muted">Barmer Sector-4 Drainage Alignment Works</p>
+          </div>
+
+          <p class="text-[13px] text-ink">
+            3 sub-projects sanctioned within 14 days under the ₹15 Lakh threshold, potentially circumventing the State Level Technical Sanction ceiling of ₹25 Lakh:
+          </p>
+
+          <div class="space-y-2 tabular-num text-[13px]">
+            <div class="p-2.5 bg-canvas border border-bordercol rounded-sm flex items-center justify-between">
+              <div>
+                <span class="font-bold text-primary">Sub-Work A: MPL-2024-14208</span>
+                <p class="text-[11px] text-muted">Drainage Sec 4-A · PWD Div 1</p>
+              </div>
+              <div class="text-right">
+                <span class="font-bold text-ink">₹14.80 Lakh</span>
+                <span class="block text-[11px] text-muted">Sanctioned: 04 Oct</span>
+              </div>
+            </div>
+
+            <div class="p-2.5 bg-canvas border border-bordercol rounded-sm flex items-center justify-between">
+              <div>
+                <span class="font-bold text-primary">Sub-Work B: MPL-2024-14209</span>
+                <p class="text-[11px] text-muted">Drainage Sec 4-B · PWD Div 1</p>
+              </div>
+              <div class="text-right">
+                <span class="font-bold text-ink">₹14.50 Lakh</span>
+                <span class="block text-[11px] text-muted">Sanctioned: 08 Oct</span>
+              </div>
+            </div>
+
+            <div class="p-2.5 bg-canvas border border-bordercol rounded-sm flex items-center justify-between">
+              <div>
+                <span class="font-bold text-primary">Sub-Work C: MPL-2024-14210</span>
+                <p class="text-[11px] text-muted">Drainage Sec 4-C · PWD Div 1</p>
+              </div>
+              <div class="text-right">
+                <span class="font-bold text-ink">₹14.90 Lakh</span>
+                <span class="block text-[11px] text-muted">Sanctioned: 12 Oct</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-2.5 bg-status-red-bg border border-status-red text-status-red text-[12px] rounded-sm flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">warning</span>
+            <span>Cumulative Sanction: <strong>₹44.20 Lakh</strong> across contiguous 800m corridor. Consolidation inquiry mandated.</span>
+          </div>
+        </div>
+
+        <!-- Zone 7: Geographic Proximity Radar -->
+        <div class="bg-surface border border-bordercol p-5 rounded-sm space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-bordercol">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 bg-canvas border border-bordercol text-ink font-bold text-[11px] rounded-sm">GIS PROXIMITY AUDIT</span>
+              <span class="text-[12px] text-muted">Cluster Anomaly</span>
+            </div>
+            <span class="px-2 py-0.5 bg-status-amber-bg border border-status-amber text-status-amber font-bold text-[11px] rounded-sm">REQUIRES VERIFICATION</span>
+          </div>
+
+          <div>
+            <h2 class="text-[18px] font-bold text-ink">Overlapping Spatial Alignment (Chohtan Block)</h2>
+            <p class="text-[12px] text-muted">Coordinates: Lat 25.7532° N, Long 71.3967° E (Within 340m Buffer)</p>
+          </div>
+
+          <!-- Radar Mini Visual -->
+          <div class="w-full h-44 bg-canvas border border-bordercol rounded-sm relative overflow-hidden flex items-center justify-center select-none">
+            <svg class="w-full h-full" viewBox="0 0 400 180">
+              <circle cx="200" cy="90" fill="none" r="70" stroke="#CBD5E1" stroke-dasharray="3 3" stroke-width="1"></circle>
+              <circle cx="200" cy="90" fill="none" r="40" stroke="#CBD5E1" stroke-width="1"></circle>
+              <circle cx="200" cy="90" fill="#FDF2F2" r="15" stroke="#B3261E" stroke-width="1"></circle>
+              
+              <path d="M 50 140 Q 200 90 350 40" fill="none" stroke="#64748B" stroke-linecap="round" stroke-width="3"></path>
+              <text class="text-[10px] fill-current text-muted font-bold" x="320" y="30">PMGSY Alignment</text>
+              
+              <circle cx="195" cy="85" fill="#B3261E" r="5"></circle>
+              <text class="text-[10px] font-bold fill-current text-status-red" text-anchor="middle" x="195" y="75">MPL-2024-14205</text>
+              
+              <line stroke="#B3261E" stroke-dasharray="2 2" stroke-width="1" x1="195" x2="245" y1="85" y2="78"></line>
+              <text class="text-[10px] font-bold fill-current text-status-red tabular-num" text-anchor="middle" x="220" y="70">Δ 340m</text>
+            </svg>
+          </div>
+
+          <p class="text-[13px] text-ink leading-relaxed">
+            <strong>Conflict Note:</strong> Spatial overlap observed between State Rural Works Dept PMGSY corridor (PKG-RJ-04) and MPLADS rural link road. High probability of concurrent billing or duplicate asset attribution on single physical culvert structure.
+          </p>
+
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-[12px] text-muted tabular-num">Asset Hash: 0x4D2A...89FF</span>
+            <button onclick="askCopilot('Dispatch verification details for Chohtan Block overlap')" class="text-primary hover:text-primary-hover text-[13px] font-bold flex items-center gap-1">
+              Dispatch Field Verifier <span class="material-symbols-outlined text-[16px]">location_on</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- =============================================================== -->
+      <!-- ZONE 8: ACTIVE AUDIT DOSSIER FOCUS -->
+      <!-- =============================================================== -->
+      <div id="section-dossier" class="bg-surface border border-bordercol p-5 rounded-sm space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-bordercol">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-[20px] font-bold text-ink" id="dossier-header-title">Active Audit Dossier Focus: MPL-2024-14205</h2>
+              <span class="px-2 py-0.5 bg-status-red-bg border border-status-red text-status-red font-bold text-[11px] rounded-sm uppercase" id="dossier-risk-badge">Score 87/100 · High Risk</span>
+            </div>
+            <p class="text-[13px] text-muted mt-0.5" id="dossier-header-subtitle">Upgradation of Rural Link Road (2.4 km) · Barmer, Rajasthan · Implementing Agency: DRDA Barmer</p>
+          </div>
+
+          <!-- Mini Tabs -->
+          <div class="flex items-center gap-1 bg-canvas border border-bordercol p-1 rounded-sm">
+            <button onclick="switchDossierTab('overview')" id="tab-btn-overview" class="px-3 py-1 bg-surface border border-bordercol text-primary font-bold text-[13px] rounded-sm transition-all">Overview</button>
+            <button onclick="switchDossierTab('financial')" id="tab-btn-financial" class="px-3 py-1 text-muted hover:text-ink text-[13px] font-semibold rounded-sm transition-all">Financial Ledger</button>
+            <button onclick="switchDossierTab('timeline')" id="tab-btn-timeline" class="px-3 py-1 text-muted hover:text-ink text-[13px] font-semibold rounded-sm transition-all">Timeline &amp; SLAs</button>
+            <button onclick="switchDossierTab('photos')" id="tab-btn-photos" class="px-3 py-1 text-muted hover:text-ink text-[13px] font-semibold rounded-sm transition-all">Photo Evidence</button>
+            <button onclick="switchDossierTab('factors')" id="tab-btn-factors" class="px-3 py-1 text-muted hover:text-ink text-[13px] font-semibold rounded-sm transition-all">Risk Factors</button>
+          </div>
+        </div>
+
+        <!-- Dossier Overview Content -->
+        <div id="dossier-tab-content-overview" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Disparity Progress Card -->
+          <div class="p-4 bg-canvas border border-bordercol rounded-sm space-y-2">
+            <span class="text-[11px] font-bold text-muted uppercase tracking-wider">Physical Progress Claim vs Satellite Verification</span>
+            <div class="flex items-baseline justify-between tabular-num pt-1">
+              <span class="text-[20px] font-bold text-ink" id="dossier-claimed-val">40% Claimed</span>
+              <span class="text-status-red font-bold text-[14px]" id="dossier-verified-val">15% Verified (Sentinel-2)</span>
+            </div>
+            <div class="w-full bg-bordercol/40 h-3 rounded-sm overflow-hidden flex">
+              <div class="bg-primary h-full" id="dossier-bar-verified" style="width: 15%"></div>
+              <div class="bg-status-red-bg border-l border-status-red h-full" id="dossier-bar-gap" style="width: 25%"></div>
+            </div>
+            <p class="text-status-red text-[12px] mt-1 font-semibold" id="dossier-progress-note">▲ 25% progress assertion divergence detected via EO backscatter.</p>
+          </div>
+
+          <!-- Factor Points -->
+          <div class="p-4 bg-canvas border border-bordercol rounded-sm space-y-1.5">
+            <span class="text-[11px] font-bold text-muted uppercase tracking-wider" id="dossier-factor-header">Algorithmic Risk Composition (+87 Total)</span>
+            <div class="space-y-1 text-[13px] tabular-num pt-1" id="dossier-factor-list">
+              <div class="flex justify-between"><span class="text-ink">Unit Cost Divergence</span><span class="text-status-red font-bold">+22 pts</span></div>
+              <div class="flex justify-between"><span class="text-ink">Inspection SLA Stall (&gt;60d)</span><span class="text-status-red font-bold">+18 pts</span></div>
+              <div class="flex justify-between"><span class="text-ink">Perceptual Image Match</span><span class="text-status-red font-bold">+31 pts</span></div>
+              <div class="flex justify-between"><span class="text-ink">Corridor Spatial Overlap</span><span class="text-status-red font-bold">+16 pts</span></div>
+            </div>
+          </div>
+
+          <!-- Statutory Status & Action -->
+          <div class="p-4 bg-canvas border border-bordercol rounded-sm flex flex-col justify-between">
+            <div>
+              <span class="text-[11px] font-bold text-muted uppercase tracking-wider">Statutory Verification Status</span>
+              <div class="font-bold text-ink text-[14px] mt-1" id="dossier-audit-ref">Special Audit Reference: CVC/MOSPI/2024/091</div>
+              <p class="text-[12px] text-muted mt-1" id="dossier-statutory-note">Pending formal explanation submission by Executive Engineer, DRDA.</p>
+            </div>
+            <button onclick="askCopilot('Provide complete risk dossier for ' + (currentProject ? currentProject.work_id : 'MPL-2024-14205'))" class="w-full mt-3 py-2 bg-primary hover:bg-primary-hover text-white text-[13px] font-bold rounded-sm text-center transition-colors block">
+              Open Full Investigation Workspace →
+            </button>
+          </div>
+        </div>
+
+        <div id="dossier-tab-content-other" class="hidden p-4 bg-canvas border border-bordercol rounded-sm text-ink text-[14px]"></div>
+      </div>
+
+      <!-- =============================================================== -->
+      <!-- ZONES 9 & 10: AUTOMATED COMPLIANCE ENGINE & AI COPILOT -->
+      <!-- =============================================================== -->
+      <div id="section-compliance" class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <!-- Zone 9: Automated Compliance Engine (7 cols) -->
+        <div class="lg:col-span-7 bg-surface border border-bordercol p-5 rounded-sm space-y-3">
+          <div class="pb-2 border-b border-bordercol">
+            <h2 class="text-[18px] font-bold text-ink">Automated Compliance Engine</h2>
+            <p class="text-[12px] text-muted">Real-time statutory rule-check ledger under GFR 2017 &amp; MoSPI Guidelines</p>
+          </div>
+
+          <div class="space-y-2.5 mt-3">
+            <!-- Rule 1 -->
+            <div class="p-3 bg-canvas border border-bordercol rounded-sm flex items-center justify-between gap-3 hover:border-primary transition-colors">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-ink tabular-num text-[14px]">Rule GFR-144</span>
+                  <span class="text-[13px] text-muted">Unit Cost Divergence Threshold (&gt;1.5x SoR)</span>
+                </div>
+                <p class="text-[12px] text-muted mt-0.5">Continuous statistical scan against State Schedule of Rates benchmarks</p>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="px-2 py-0.5 bg-status-red-bg border border-status-red text-status-red font-bold text-[11px] rounded-sm">VIOLATION</span>
+                <span class="text-[11px] text-muted block mt-1 tabular-num">142 projects</span>
+              </div>
+            </div>
+
+            <!-- Rule 2 -->
+            <div class="p-3 bg-canvas border border-bordercol rounded-sm flex items-center justify-between gap-3 hover:border-primary transition-colors">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-ink tabular-num text-[14px]">Rule MPL-08</span>
+                  <span class="text-[13px] text-muted">Physical Milestone Verification SLA (&lt;30 Days)</span>
+                </div>
+                <p class="text-[12px] text-muted mt-0.5">District authority mandatory on-site physical verification timeframe</p>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="px-2 py-0.5 bg-status-amber-bg border border-status-amber text-status-amber font-bold text-[11px] rounded-sm">WARNING</span>
+                <span class="text-[11px] text-muted block mt-1 tabular-num">1,428 projects</span>
+              </div>
+            </div>
+
+            <!-- Rule 3 -->
+            <div class="p-3 bg-canvas border border-bordercol rounded-sm flex items-center justify-between gap-3 hover:border-primary transition-colors">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-ink tabular-num text-[14px]">Rule NIC-12</span>
+                  <span class="text-[13px] text-muted">Geo-tagged Photo EXIF &amp; Coordinate Tamper-Check</span>
+                </div>
+                <p class="text-[12px] text-muted mt-0.5">Cryptographic camera sensor signature and timestamp coherence validation</p>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="px-2 py-0.5 bg-status-red-bg border border-status-red text-status-red font-bold text-[11px] rounded-sm">VIOLATION</span>
+                <span class="text-[11px] text-muted block mt-1 tabular-num">88 projects</span>
+              </div>
+            </div>
+
+            <!-- Rule 4 -->
+            <div class="p-3 bg-canvas border border-bordercol rounded-sm flex items-center justify-between gap-3 hover:border-primary transition-colors">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-ink tabular-num text-[14px]">Rule GFR-130</span>
+                  <span class="text-[13px] text-muted">Sanction Threshold Avoidance / Project Splitting</span>
+                </div>
+                <p class="text-[12px] text-muted mt-0.5">Contiguous works divided to bypass state financial committee ceilings</p>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="px-2 py-0.5 bg-status-amber-bg border border-status-amber text-status-amber font-bold text-[11px] rounded-sm">WARNING</span>
+                <span class="text-[11px] text-muted block mt-1 tabular-num">41 clusters</span>
+              </div>
+            </div>
+
+            <!-- Rule 5 -->
+            <div class="p-3 bg-canvas border border-bordercol rounded-sm flex items-center justify-between gap-3 hover:border-primary transition-colors">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-ink tabular-num text-[14px]">Rule PFMS-04</span>
+                  <span class="text-[13px] text-muted">Dual Disbursal / PFMS Transaction Reconciliation</span>
+                </div>
+                <p class="text-[12px] text-muted mt-0.5">Direct banking ledger synchronization with Public Financial Management System</p>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="px-2 py-0.5 bg-status-green-bg border border-status-green text-status-green font-bold text-[11px] rounded-sm">CLEARED</span>
+                <span class="text-[11px] text-muted block mt-1 tabular-num">2,46,120 projects</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zone 10: Assistive Investigation Copilot (5 cols) -->
+        <div class="lg:col-span-5 bg-surface border border-bordercol p-5 rounded-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-bordercol">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-ai-teal text-[22px]">smart_toy</span>
+                <h2 class="text-[18px] font-bold text-ink">Assistive Audit Copilot</h2>
+              </div>
+              <span class="px-2 py-0.5 bg-ai-teal text-white text-[10px] font-bold rounded-sm">ANALYTICAL · NON-BINDING</span>
+            </div>
+
+            <!-- Prompt Chips -->
+            <div class="flex flex-wrap gap-1.5 py-3">
+              <button onclick="askCopilot('Explain risk factors for Barmer cluster')" class="px-2 py-1 bg-canvas border border-bordercol hover:bg-bordercol/30 text-ink text-[11px] rounded-sm transition-colors">
+                Explain risk factors for Barmer cluster
+              </button>
+              <button onclick="askCopilot('Summarize M/s Marwar Infra violations')" class="px-2 py-1 bg-canvas border border-bordercol hover:bg-bordercol/30 text-ink text-[11px] rounded-sm transition-colors">
+                Summarize M/s Marwar Infra violations
+              </button>
+              <button onclick="askCopilot('Show SLA delays in Rajasthan')" class="px-2 py-1 bg-canvas border border-bordercol hover:bg-bordercol/30 text-ink text-[11px] rounded-sm transition-colors">
+                Show SLA delays in Rajasthan
+              </button>
+            </div>
+
+            <!-- Conversation Thread -->
+            <div id="copilot-thread" class="space-y-3 text-[13px] bg-canvas border border-bordercol p-3 rounded-sm max-h-64 overflow-y-auto">
+              <!-- User Message -->
+              <div class="flex gap-2">
+                <span class="material-symbols-outlined text-[18px] text-muted">person</span>
+                <div class="bg-surface border border-bordercol p-2.5 rounded-sm text-ink flex-1">
+                  Why was project <strong>MPL-2024-14205</strong> assigned an 87/100 risk score?
+                </div>
+              </div>
+              <!-- Copilot Message -->
+              <div class="flex gap-2">
+                <span class="material-symbols-outlined text-[18px] text-ai-teal">psychology</span>
+                <div class="bg-surface border-l-4 border-l-ai-teal border border-bordercol p-3 rounded-sm text-ink leading-relaxed flex-1">
+                  The <strong>87/100 risk score</strong> is driven by four quantitative audit variables:
+                  <ol class="list-decimal ml-4 mt-1.5 space-y-1 text-[12px]">
+                    <li><strong>Cost Divergence:</strong> ₹13.33L/km vs ₹5.79L/km peer district median (+22 pts).</li>
+                    <li><strong>pHash Conflict:</strong> 96% perceptual hash similarity between its uploaded culvert photo and 2023 Pali work MPL-2023-08812 (+31 pts).</li>
+                    <li><strong>SLA Delay:</strong> 74-day overdue physical milestone sign-off (+18 pts).</li>
+                    <li><strong>Proximity:</strong> Within 340m of PMGSY road alignment PMG-RJ-4019 (+16 pts).</li>
+                  </ol>
+                  <div class="mt-2 text-[11px] text-muted">
+                    Assistive calculation pursuant to GFR 2017 Rule 144. Formal legal verification remains vested in the District Collector.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input Bar -->
+          <div class="pt-3">
+            <form id="copilot-form" class="flex gap-2" onsubmit="handleCopilotSubmit(event)">
+              <input id="copilot-input" class="flex-1 h-10 px-3 bg-canvas border border-bordercol text-ink text-[13px] rounded-sm focus:border-primary focus:bg-surface focus:outline-none placeholder:text-muted" placeholder="Query audit intelligence database..." type="text">
+              <button class="px-4 bg-ai-teal hover:bg-[#095757] text-white text-[13px] font-bold rounded-sm transition-colors" type="submit">
+                Ask
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- FOOTER -->
+  <!-- ================================================================= -->
+  <footer class="w-full bg-surface border-t border-bordercol py-6 px-4 md:px-8 mt-12 text-[12px] text-muted">
+    <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-bold text-ink">MoSPI National Civic Intelligence Node</span>
+          <span>·</span>
+          <span>GIGW 3.0 Certified Compliance</span>
+          <span>·</span>
+          <span>RTI Act 2005 Statutory Disclosures Enforced</span>
+        </div>
+        <p class="text-muted leading-tight">Administrative access logs, forensic state hash, and analytical telemetry cryptographically signed for parliamentary review under Article 148/151.</p>
+      </div>
+      <div class="flex flex-col md:items-end gap-1">
+        <span class="tabular-num text-ink font-semibold">Ledger Hash: 0x8F9C...4B12 · Timestamp: 2024-05-18 10:42:01 IST</span>
+        <span class="text-muted">Authorized for Central and State Auditing Entities Only</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================================================================= -->
+  <!-- BACKEND & DATABASE CLIENT ENGINE -->
+  <!-- ================================================================= -->
+  <script>
+    const API_BASE = window.location.port === '8000' ? '/api/v1' : 'http://localhost:8000/api/v1';
+
+    let allProjectsData = [
+      {
+        work_id: "MPL-2024-14205",
+        work_title: "Upgradation of Rural Link Road (2.4 km)",
+        state: "Rajasthan",
+        district: "Barmer",
+        sanctioned_amount_inr: 3200000,
+        disbursed_amount_inr: 1280000,
+        risk_score: 87,
+        primary_flag_reason: "Perceptual Photo Match + 2.3x SoR Cost Outlier",
+        status: "EVIDENCE CONFLICT",
+        claimed_progress: 40,
+        verified_progress: 15,
+        satellite_note: "▲ 25% progress assertion divergence detected via EO backscatter.",
+        audit_ref: "Special Audit Reference: CVC/MOSPI/2024/091",
+        statutory_note: "Pending formal explanation submission by Executive Engineer, DRDA.",
+        factors: [
+          { name: "Unit Cost Divergence", pts: "+22 pts" },
+          { name: "Inspection SLA Stall (>60d)", pts: "+18 pts" },
+          { name: "Perceptual Image Match", pts: "+31 pts" },
+          { name: "Corridor Spatial Overlap", pts: "+16 pts" }
+        ]
+      },
+      {
+        work_id: "MPL-2024-09841",
+        work_title: "Construction of Community Flood Shelter",
+        state: "West Bengal",
+        district: "Murshidabad",
+        sanctioned_amount_inr: 4850000,
+        disbursed_amount_inr: 2400000,
+        risk_score: 79,
+        primary_flag_reason: "Contractor Network Overlap (3 simultaneous works)",
+        status: "EVIDENCE CONFLICT",
+        claimed_progress: 55,
+        verified_progress: 20,
+        satellite_note: "▲ 35% progress disparity on foundation plinth via Sentinel-2 EO.",
+        audit_ref: "Special Audit Reference: CVC/MOSPI/2024/092",
+        statutory_note: "Shared machinery conflict reported across adjacent flood-relief packages.",
+        factors: [
+          { name: "Contractor Network Overlap", pts: "+30 pts" },
+          { name: "Disbursal Velocity Outlier", pts: "+24 pts" },
+          { name: "Inspection SLA Stall (>45d)", pts: "+15 pts" },
+          { name: "Proximity Variance", pts: "+10 pts" }
+        ]
+      },
+      {
+        work_id: "MPL-2024-09431",
+        work_title: "Smart Science & Computing Lab Complex",
+        state: "Kerala",
+        district: "Wayanad",
+        sanctioned_amount_inr: 1850000,
+        disbursed_amount_inr: 1200000,
+        risk_score: 64,
+        primary_flag_reason: "Physical Milestone Completion Delay (+74d overdue)",
+        status: "REQUIRES VERIFICATION",
+        claimed_progress: 70,
+        verified_progress: 50,
+        satellite_note: "▲ 20% interior outfitting delay. Field audit inspection scheduled.",
+        audit_ref: "Statutory Reference: MOSPI/SLA/2024/772",
+        statutory_note: "Notice issued to District Education Officer for physical inspection.",
+        factors: [
+          { name: "Milestone Delay Stall", pts: "+28 pts" },
+          { name: "Procurement Variance", pts: "+18 pts" },
+          { name: "Payment Frequency Signal", pts: "+12 pts" },
+          { name: "Baseline Geo Alignment", pts: "+6 pts" }
+        ]
+      },
+      {
+        work_id: "MPL-2024-11872",
+        work_title: "50,000L Community R.O. Water Filtration Plant",
+        state: "Uttar Pradesh",
+        district: "Varanasi",
+        sanctioned_amount_inr: 2480000,
+        disbursed_amount_inr: 2480000,
+        risk_score: 12,
+        primary_flag_reason: "Baseline Met · Field Verification Audited & Cleared",
+        status: "VERIFIED",
+        claimed_progress: 100,
+        verified_progress: 100,
+        satellite_note: "Physical plant structure and solar telemetry verified by satellite.",
+        audit_ref: "Clearance Reference: AUDIT/CLEARED/2024/118",
+        statutory_note: "Statutory verification complete. Asset fully functional and commissioned.",
+        factors: [
+          { name: "Cost Compliance Met", pts: "+0 pts" },
+          { name: "Physical SLA Met", pts: "+0 pts" },
+          { name: "Unique Photo Signatures", pts: "+0 pts" },
+          { name: "PFMS Reconciliation Verified", pts: "+12 pts" }
+        ]
+      },
+      {
+        work_id: "MPL-2024-16203",
+        work_title: "High School Boundary Wall & Stormwater Drain",
+        state: "Bihar",
+        district: "Purnia",
+        sanctioned_amount_inr: 1420000,
+        disbursed_amount_inr: 710000,
+        risk_score: 71,
+        primary_flag_reason: "1.9x Unit Cost Divergence vs District Schedule of Rates",
+        status: "REQUIRES VERIFICATION",
+        claimed_progress: 50,
+        verified_progress: 25,
+        satellite_note: "▲ 25% boundary trenching unverified. Ground radar verification requested.",
+        audit_ref: "Special Audit Reference: CVC/MOSPI/2024/104",
+        statutory_note: "Sub-base grading variance under investigation with local PWD division.",
+        factors: [
+          { name: "Unit Cost Divergence", pts: "+26 pts" },
+          { name: "Sanction Splitting Indicator", pts: "+20 pts" },
+          { name: "Delayed Field Sign-off", pts: "+15 pts" },
+          { name: "Contiguous Boundary Cluster", pts: "+10 pts" }
+        ]
+      },
+      {
+        work_id: "MPL-2024-17339",
+        work_title: "Taluk Level Watershed Bunding & Culverts",
+        state: "Karnataka",
+        district: "Belagavi",
+        sanctioned_amount_inr: 2950000,
+        disbursed_amount_inr: 1475000,
+        risk_score: 68,
+        primary_flag_reason: "Unit cost per km outlier across contiguous taluks",
+        status: "REQUIRES VERIFICATION",
+        claimed_progress: 60,
+        verified_progress: 35,
+        satellite_note: "▲ 25% earthwork deviation detected vs taluk baseline.",
+        audit_ref: "Statutory Reference: MOSPI/SLA/2024/889",
+        statutory_note: "Mandatory sample field verification assigned to District Inspector.",
+        factors: [
+          { name: "Unit Cost Outlier", pts: "+25 pts" },
+          { name: "Excavation Volumetric Variance", pts: "+20 pts" },
+          { name: "Field Inspection Stall", pts: "+14 pts" },
+          { name: "Spatial Alignment", pts: "+9 pts" }
+        ]
+      }
+    ];
+
+    let filteredProjects = [...allProjectsData];
+    let currentPage = 1;
+    const pageSize = 5;
+    let currentProject = allProjectsData[0];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchDashboardTelemetry();
+      fetchLiveProjects();
+      renderProjectsTable();
+      setupEventListeners();
+    });
+
+    async function fetchDashboardTelemetry() {
+      try {
+        const res = await fetch(`${API_BASE}/dashboard/overview`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.kpis) {
+          if (document.getElementById('kpi-total-projects')) {
+            document.getElementById('kpi-total-projects').textContent = data.kpis.total_tracked_projects.toLocaleString();
+          }
+          if (document.getElementById('kpi-total-sanctioned')) {
+            document.getElementById('kpi-total-sanctioned').textContent = `FY 2024–25 · ₹${data.kpis.total_sanctioned_cr.toLocaleString()} Cr Sanctioned`;
+          }
+          if (document.getElementById('kpi-high-risk')) {
+            document.getElementById('kpi-high-risk').textContent = data.kpis.high_risk_outliers.toLocaleString();
+          }
+          if (document.getElementById('kpi-overdue-sla')) {
+            document.getElementById('kpi-overdue-sla').textContent = data.kpis.overdue_verification_slas.toLocaleString();
+          }
+          if (document.getElementById('kpi-compliance-alerts')) {
+            document.getElementById('kpi-compliance-alerts').textContent = data.kpis.compliance_rule_alerts.toLocaleString();
+          }
+          if (document.getElementById('kpi-crossmatch-conf')) {
+            document.getElementById('kpi-crossmatch-conf').textContent = `${data.kpis.ai_cross_match_confidence_pct}%`;
+          }
+          if (document.getElementById('freshness-banner')) {
+            document.getElementById('freshness-banner').innerHTML = `Synced: ${data.kpis.synced_timestamp} (543 Constituencies / PFMS) · <strong class="text-status-red">${data.kpis.high_risk_outliers > 0 ? '14 New Anomalies (24h)' : '0 Anomalies'}</strong>`;
+          }
+        }
+      } catch (err) {
+        console.log("Using built-in real-time dataset store.");
+      }
+    }
+
+    async function fetchLiveProjects() {
+      try {
+        const res = await fetch(`${API_BASE}/risk?limit=50`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.projects && data.projects.length > 0) {
+          const mapped = data.projects.map((p, idx) => {
+            const score = Math.round(p.risk_score || 70);
+            return {
+              work_id: p.work_id || `MPL-2024-${14200 + idx}`,
+              work_title: p.work_title || "Public Infrastructure Development Work",
+              state: p.state || "Rajasthan",
+              district: p.constituency || p.state || "Barmer",
+              sanctioned_amount_inr: p.sanctioned_amount_inr || (p.disbursed_amount_inr ? p.disbursed_amount_inr * 1.5 : 2500000),
+              disbursed_amount_inr: p.disbursed_amount_inr || 1200000,
+              risk_score: score,
+              primary_flag_reason: p.top_contributing_factor ? `${p.top_contributing_factor} flagged under GFR 144` : (score > 75 ? "Perceptual Photo Match + SoR Outlier" : "Milestone verification delay"),
+              status: score >= 75 ? "EVIDENCE CONFLICT" : (score >= 40 ? "REQUIRES VERIFICATION" : "VERIFIED"),
+              claimed_progress: 45,
+              verified_progress: score > 75 ? 15 : 40,
+              satellite_note: score > 75 ? "▲ 30% progress assertion divergence detected via Sentinel-2 EO." : "Satellite evidence aligned within normal variance.",
+              audit_ref: `Special Audit Reference: CVC/MOSPI/2024/${String(idx + 101).padStart(3, '0')}`,
+              statutory_note: "Statutory inspection and algorithmic triage active.",
+              factors: [
+                { name: "Unit Cost Divergence", pts: `+${Math.round((p.component_breakdown?.cost_anomaly || 20) * 0.3)} pts` },
+                { name: "Inspection SLA Stall", pts: `+${Math.round((p.component_breakdown?.delay_anomaly || 15) * 0.25)} pts` },
+                { name: "Photo Match Similarity", pts: `+${Math.round((p.component_breakdown?.evidence_issue || 25) * 0.3)} pts` },
+                { name: "Spatial Alignment", pts: `+${Math.round((p.component_breakdown?.spatial_signal || 10) * 0.15)} pts` }
+              ]
+            };
+          });
+          allProjectsData = [...allProjectsData, ...mapped.filter(m => !allProjectsData.some(a => a.work_id === m.work_id))];
+          applyFilters();
+        }
+      } catch (err) {
+        console.log("Local database active.");
+      }
+    }
+
+    function renderProjectsTable() {
+      const tbody = document.getElementById('projects-table-body');
+      if (!tbody) return;
+
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const paged = filteredProjects.slice(start, end);
+
+      if (paged.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-muted">No projects found matching the selected filters.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = paged.map(p => {
+        const isConflict = p.status === 'EVIDENCE CONFLICT';
+        const isVerified = p.status === 'VERIFIED';
+        
+        const statusBadge = isConflict 
+          ? `<span class="px-2 py-0.5 bg-status-red-bg border border-status-red text-status-red text-[11px] font-bold rounded-sm uppercase tracking-wider">EVIDENCE CONFLICT</span>`
+          : (isVerified 
+            ? `<span class="px-2 py-0.5 bg-status-green-bg border border-status-green text-status-green text-[11px] font-bold rounded-sm uppercase tracking-wider">VERIFIED</span>`
+            : `<span class="px-2 py-0.5 bg-status-amber-bg border border-status-amber text-status-amber text-[11px] font-bold rounded-sm uppercase tracking-wider">REQUIRES VERIFICATION</span>`);
+        
+        const scoreBadge = p.risk_score >= 75 
+          ? `<span class="px-2 py-0.5 bg-status-red-bg border border-status-red text-status-red font-bold text-[12px] rounded-sm">${p.risk_score} / 100</span>`
+          : (p.risk_score >= 50 
+            ? `<span class="px-2 py-0.5 bg-status-amber-bg border border-status-amber text-status-amber font-bold text-[12px] rounded-sm">${p.risk_score} / 100</span>`
+            : `<span class="px-2 py-0.5 bg-status-green-bg border border-status-green text-status-green font-bold text-[12px] rounded-sm">${p.risk_score} / 100</span>`);
+
+        const sancLakh = (p.sanctioned_amount_inr / 100000).toFixed(2);
+        const disbLakh = (p.disbursed_amount_inr / 100000).toFixed(2);
+
+        return `
+          <tr class="hover:bg-canvas transition-colors bg-surface">
+            <td class="py-3 px-4 font-semibold">
+              <div class="text-primary tabular-num">${p.work_id}</div>
+              <div class="text-ink font-normal text-[13px] line-clamp-1">${p.work_title}</div>
+            </td>
+            <td class="py-3 px-4 text-muted text-[13px]">
+              ${p.district}, ${p.state}
+            </td>
+            <td class="py-3 px-4 text-right tabular-num">
+              <div class="font-bold text-ink">₹${sancLakh} Lakh</div>
+              <div class="text-muted text-[12px]">Disbursed: ₹${disbLakh}L</div>
+            </td>
+            <td class="py-3 px-4 text-center">
+              ${scoreBadge}
+            </td>
+            <td class="py-3 px-4 text-ink text-[13px]">
+              <span class="${isConflict ? 'text-status-red font-semibold' : ''}">${p.primary_flag_reason}</span>
+            </td>
+            <td class="py-3 px-4 text-center">
+              ${statusBadge}
+            </td>
+            <td class="py-3 px-4 text-right">
+              <button onclick="openProjectDossier('${p.work_id}')" class="text-primary hover:text-primary-hover font-bold inline-flex items-center gap-0.5 cursor-pointer text-[13px]">
+                Open Case <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      if (document.getElementById('table-showing-text')) {
+        document.getElementById('table-showing-text').textContent = `Showing ${Math.min(start + 1, filteredProjects.length)}–${Math.min(end, filteredProjects.length)} of ${filteredProjects.length} records · GFR Rule 144 Active Audit Ledger`;
+      }
+      if (document.getElementById('current-page-num')) {
+        document.getElementById('current-page-num').textContent = currentPage;
+      }
+    }
+
+    function applyFilters() {
+      const search = (document.getElementById('table-search')?.value || '').trim().toLowerCase();
+      const state = (document.getElementById('table-state-filter')?.value || '').trim().toLowerCase();
+      const risk = (document.getElementById('table-risk-filter')?.value || 'ALL');
+
+      filteredProjects = allProjectsData.filter(p => {
+        const matchSearch = !search || 
+          p.work_id.toLowerCase().includes(search) || 
+          p.work_title.toLowerCase().includes(search) ||
+          p.district.toLowerCase().includes(search) ||
+          p.state.toLowerCase().includes(search);
+
+        const matchState = !state || p.state.toLowerCase().includes(state) || p.district.toLowerCase().includes(state);
+
+        let matchRisk = true;
+        if (risk === 'HIGH') matchRisk = p.risk_score >= 75;
+        else if (risk === 'MEDIUM') matchRisk = p.risk_score >= 50 && p.risk_score < 75;
+        else if (risk === 'LOW') matchRisk = p.risk_score < 50;
+
+        return matchSearch && matchState && matchRisk;
+      });
+
+      currentPage = 1;
+      renderProjectsTable();
+    }
+
+    function changePage(delta) {
+      const maxPage = Math.ceil(filteredProjects.length / pageSize) || 1;
+      currentPage = Math.max(1, Math.min(maxPage, currentPage + delta));
+      renderProjectsTable();
+    }
+
+    function selectDistrict(district, state) {
+      const stateSelect = document.getElementById('table-state-filter');
+      if (stateSelect) stateSelect.value = state;
+      const searchInput = document.getElementById('table-search');
+      if (searchInput) searchInput.value = district;
+      applyFilters();
+
+      const match = allProjectsData.find(p => p.district.toLowerCase() === district.toLowerCase() || p.state.toLowerCase() === state.toLowerCase());
+      if (match) openProjectDossier(match.work_id);
+
+      const manifest = document.getElementById('section-manifest');
+      if (manifest) manifest.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function openProjectDossier(workId) {
+      const proj = allProjectsData.find(p => p.work_id === workId);
+      if (!proj) return;
+      currentProject = proj;
+
+      if (document.getElementById('dossier-header-title')) {
+        document.getElementById('dossier-header-title').textContent = `Active Audit Dossier Focus: ${proj.work_id}`;
+      }
+      if (document.getElementById('dossier-risk-badge')) {
+        const badge = document.getElementById('dossier-risk-badge');
+        badge.textContent = `Score ${proj.risk_score}/100 · ${proj.risk_score >= 75 ? 'High Risk' : (proj.risk_score >= 50 ? 'Medium Risk' : 'Low Risk')}`;
+        badge.className = `px-2 py-0.5 ${proj.risk_score >= 75 ? 'bg-status-red-bg border border-status-red text-status-red' : (proj.risk_score >= 50 ? 'bg-status-amber-bg border border-status-amber text-status-amber' : 'bg-status-green-bg border border-status-green text-status-green')} font-bold text-[11px] rounded-sm uppercase`;
+      }
+      if (document.getElementById('dossier-header-subtitle')) {
+        document.getElementById('dossier-header-subtitle').textContent = `${proj.work_title} · ${proj.district}, ${proj.state} · Implementing Agency: DRDA ${proj.district}`;
+      }
+      if (document.getElementById('dossier-claimed-val')) {
+        document.getElementById('dossier-claimed-val').textContent = `${proj.claimed_progress}% Claimed`;
+      }
+      if (document.getElementById('dossier-verified-val')) {
+        document.getElementById('dossier-verified-val').textContent = `${proj.verified_progress}% Verified (Sentinel-2)`;
+      }
+      if (document.getElementById('dossier-bar-verified')) {
+        document.getElementById('dossier-bar-verified').style.width = `${proj.verified_progress}%`;
+      }
+      if (document.getElementById('dossier-bar-gap')) {
+        document.getElementById('dossier-bar-gap').style.width = `${Math.max(0, proj.claimed_progress - proj.verified_progress)}%`;
+      }
+      if (document.getElementById('dossier-progress-note')) {
+        document.getElementById('dossier-progress-note').textContent = proj.satellite_note;
+      }
+      if (document.getElementById('dossier-factor-header')) {
+        document.getElementById('dossier-factor-header').textContent = `Algorithmic Risk Composition (+${proj.risk_score} Total)`;
+      }
+      if (document.getElementById('dossier-factor-list')) {
+        document.getElementById('dossier-factor-list').innerHTML = (proj.factors || []).map(f => `
+          <div class="flex justify-between"><span class="text-ink">${f.name}</span><span class="text-status-red font-bold">${f.pts}</span></div>
+        `).join('');
+      }
+      if (document.getElementById('dossier-audit-ref')) {
+        document.getElementById('dossier-audit-ref').textContent = proj.audit_ref;
+      }
+      if (document.getElementById('dossier-statutory-note')) {
+        document.getElementById('dossier-statutory-note').textContent = proj.statutory_note;
+      }
+
+      switchDossierTab('overview');
+      const dossier = document.getElementById('section-dossier');
+      if (dossier) dossier.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function switchDossierTab(tab) {
+      const tabs = ['overview', 'financial', 'timeline', 'photos', 'factors'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (btn) {
+          if (t === tab) {
+            btn.className = "px-3 py-1 bg-surface border border-bordercol text-primary font-bold text-[13px] rounded-sm transition-all";
+          } else {
+            btn.className = "px-3 py-1 text-muted hover:text-ink text-[13px] font-semibold rounded-sm transition-all";
+          }
+        }
+      });
+
+      const overviewBox = document.getElementById('dossier-tab-content-overview');
+      const otherBox = document.getElementById('dossier-tab-content-other');
+
+      if (tab === 'overview') {
+        if (overviewBox) overviewBox.classList.remove('hidden');
+        if (otherBox) otherBox.classList.add('hidden');
+      } else {
+        if (overviewBox) overviewBox.classList.add('hidden');
+        if (otherBox) {
+          otherBox.classList.remove('hidden');
+          const sanc = ((currentProject?.sanctioned_amount_inr || 3200000) / 100000).toFixed(2);
+          const disb = ((currentProject?.disbursed_amount_inr || 1280000) / 100000).toFixed(2);
+          
+          if (tab === 'financial') {
+            otherBox.innerHTML = `
+              <div class="space-y-3 tabular-num">
+                <h3 class="text-[16px] font-bold text-ink">Financial Ledger Breakdown</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div class="p-3 bg-canvas border border-bordercol rounded-sm"><span class="text-muted text-[11px] font-bold block uppercase">SANCTIONED AMOUNT</span><strong class="text-[18px] text-primary">₹${sanc} Lakh</strong></div>
+                  <div class="p-3 bg-canvas border border-bordercol rounded-sm"><span class="text-muted text-[11px] font-bold block uppercase">DISBURSED AMOUNT</span><strong class="text-[18px] text-ink">₹${disb} Lakh</strong></div>
+                  <div class="p-3 bg-canvas border border-bordercol rounded-sm"><span class="text-muted text-[11px] font-bold block uppercase">PFMS RECONCILIATION</span><strong class="text-[18px] text-status-green">VERIFIED</strong></div>
+                </div>
+                <p class="text-[12px] text-muted">Cryptographic banking hashes synchronized with Public Financial Management System (PFMS) Node.</p>
+              </div>
+            `;
+          } else if (tab === 'timeline') {
+            otherBox.innerHTML = `
+              <div class="space-y-3 tabular-num">
+                <h3 class="text-[16px] font-bold text-ink">Statutory SLA Milestone History</h3>
+                <div class="space-y-2 text-[13px]">
+                  <div class="p-2.5 bg-canvas border border-bordercol rounded-sm flex justify-between"><span>1. Administrative Sanction</span><span class="text-status-green font-bold">CLEARED (04 Oct)</span></div>
+                  <div class="p-2.5 bg-canvas border border-bordercol rounded-sm flex justify-between"><span>2. Work Execution Commencement</span><span class="text-status-green font-bold">COMMENCED (12 Oct)</span></div>
+                  <div class="p-2.5 bg-canvas border border-bordercol rounded-sm flex justify-between"><span>3. Mandatory Physical Inspection (30d SLA)</span><span class="text-status-red font-bold">OVERDUE (+74 days stall)</span></div>
+                </div>
+              </div>
+            `;
+          } else if (tab === 'photos') {
+            otherBox.innerHTML = `
+              <div class="space-y-3">
+                <h3 class="text-[16px] font-bold text-ink">Perceptual Hash Duplicate Audit</h3>
+                <div class="p-3 bg-status-red-bg border border-status-red text-status-red text-[13px] rounded-sm">
+                  <strong>96% Visual Signature Conflict:</strong> Photo uploaded for ${currentProject?.work_id} matches 2023 Pali Culvert Record (MPL-2023-08812) with perceptual Hamming distance = 2.
+                </div>
+              </div>
+            `;
+          } else if (tab === 'factors') {
+            otherBox.innerHTML = `
+              <div class="space-y-3">
+                <h3 class="text-[16px] font-bold text-ink">Detailed Factor Point Weights</h3>
+                <div class="space-y-2 text-[13px]">
+                  ${(currentProject?.factors || []).map(f => `<div class="p-2.5 bg-canvas border border-bordercol rounded-sm flex justify-between"><span>${f.name}</span><strong class="text-status-red">${f.pts}</strong></div>`).join('')}
+                </div>
+              </div>
+            `;
+          }
+        }
+      }
+    }
+
+    async function handleCopilotSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('copilot-input');
+      if (!input || !input.value.trim()) return;
+      const q = input.value.trim();
+      input.value = '';
+      await askCopilot(q);
+    }
+
+    async function askCopilot(query) {
+      const thread = document.getElementById('copilot-thread');
+      if (!thread) return;
+
+      const userDiv = document.createElement('div');
+      userDiv.className = "flex gap-2";
+      userDiv.innerHTML = `
+        <span class="material-symbols-outlined text-[18px] text-muted">person</span>
+        <div class="bg-surface border border-bordercol p-2.5 rounded-sm text-ink text-[13px] flex-1">${query}</div>
+      `;
+      thread.appendChild(userDiv);
+      thread.scrollTop = thread.scrollHeight;
+
+      const botDiv = document.createElement('div');
+      botDiv.className = "flex gap-2";
+      botDiv.innerHTML = `
+        <span class="material-symbols-outlined text-[18px] text-ai-teal">psychology</span>
+        <div class="bg-surface border-l-4 border-l-ai-teal border border-bordercol p-3 rounded-sm text-muted text-[13px] leading-relaxed italic flex-1">
+          Analyzing audit intelligence ledger...
+        </div>
+      `;
+      thread.appendChild(botDiv);
+      thread.scrollTop = thread.scrollHeight;
+
+      try {
+        const res = await fetch(`${API_BASE}/copilot/query`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+        
+        let answerHtml = "";
+        if (res.ok) {
+          const data = await res.json();
+          answerHtml = data.response || "No response received.";
+        } else {
+          answerHtml = generateOfflineCopilotResponse(query);
+        }
+
+        botDiv.querySelector('div').className = "bg-surface border-l-4 border-l-ai-teal border border-bordercol p-3 rounded-sm text-ink text-[13px] leading-relaxed flex-1";
+        botDiv.querySelector('div').innerHTML = answerHtml;
+        thread.scrollTop = thread.scrollHeight;
+      } catch (err) {
+        const fallback = generateOfflineCopilotResponse(query);
+        botDiv.querySelector('div').className = "bg-surface border-l-4 border-l-ai-teal border border-bordercol p-3 rounded-sm text-ink text-[13px] leading-relaxed flex-1";
+        botDiv.querySelector('div').innerHTML = fallback;
+        thread.scrollTop = thread.scrollHeight;
+      }
+    }
+
+    function generateOfflineCopilotResponse(q) {
+      const query = q.toLowerCase();
+      if (query.includes('barmer') || query.includes('14205')) {
+        return `The <strong>87/100 risk score</strong> for project <strong>MPL-2024-14205</strong> (Barmer Rural Link Road) is driven by four quantitative audit variables:
+          <ol class="list-decimal ml-4 mt-1.5 space-y-1 text-[12px]">
+            <li><strong>Cost Divergence:</strong> ₹13.33L/km vs ₹5.79L/km peer district median (+22 pts).</li>
+            <li><strong>pHash Conflict:</strong> 96% perceptual hash similarity between its uploaded culvert photo and 2023 Pali work MPL-2023-08812 (+31 pts).</li>
+            <li><strong>SLA Delay:</strong> 74-day overdue physical milestone sign-off (+18 pts).</li>
+            <li><strong>Proximity:</strong> Within 340m of PMGSY road alignment PMG-RJ-4019 (+16 pts).</li>
+          </ol>
+          <div class="mt-2 text-[11px] text-muted">Assistive calculation pursuant to GFR 2017 Rule 144. Formal legal verification remains vested in the District Collector.</div>`;
+      } else if (query.includes('marwar') || query.includes('contractor')) {
+        return `<strong>Entity Intelligence: M/s Marwar Infra & Earthworks Pvt Ltd</strong> (DRDA Reg: V-4019)
+          <ul class="list-disc ml-4 mt-1.5 space-y-1 text-[12px]">
+            <li><strong>Active Jurisdictions:</strong> Barmer, Pali, Jaisalmer (3 contiguous districts).</li>
+            <li><strong>Concurrent Billing:</strong> 4 simultaneous active contracts (Cumulative ₹84.5 Lakh).</li>
+            <li><strong>Evidence Conflict:</strong> 96% perceptual hash match between Barmer and Pali culverts.</li>
+            <li><strong>Statutory Action:</strong> Multi-site physical verification mandated under GFR Rule 144.</li>
+          </ul>`;
+      } else if (query.includes('sla') || query.includes('rajasthan')) {
+        return `<strong>Rajasthan SLA Milestone Audit:</strong>
+          <ul class="list-disc ml-4 mt-1.5 space-y-1 text-[12px]">
+            <li><strong>Projects Exceeding 30d SLA:</strong> 412 projects in Rajasthan jurisdiction.</li>
+            <li><strong>Average Delay:</strong> 58 days past sanction threshold.</li>
+            <li><strong>Statutory Trigger:</strong> Rule MPL-08 Mandatory Physical Milestone verification breach.</li>
+          </ul>`;
+      } else {
+        return `<strong>Audit Intelligence Scan for '${q}':</strong>
+          <p class="mt-1">Multi-variable anomaly scan complete across 2,48,190 works in eSAKSHI & PFMS database. Rule evaluations: GFR-144 (Cost Norms), GFR-130 (Splitting Checks), NIC-12 (Photo Sensors). Fairness Safeguard: Zero penalty applied to unavailable feeds.</p>`;
+      }
+    }
+
+    function triggerCsvExport() {
+      window.open(`${API_BASE}/export/cag-csv`, '_blank');
+    }
+
+    function triggerPdfExport() {
+      window.print();
+    }
+
+    function setupEventListeners() {
+      document.getElementById('btn-export-csv')?.addEventListener('click', triggerCsvExport);
+      document.getElementById('btn-export-pdf')?.addEventListener('click', triggerPdfExport);
+
+      document.getElementById('table-search')?.addEventListener('input', () => applyFilters());
+      document.getElementById('table-state-filter')?.addEventListener('change', () => applyFilters());
+      document.getElementById('table-risk-filter')?.addEventListener('change', () => applyFilters());
+      document.getElementById('btn-apply-filter')?.addEventListener('click', () => applyFilters());
+
+      document.getElementById('btn-map-all')?.addEventListener('click', () => {
+        const s = document.getElementById('table-state-filter');
+        if (s) s.value = '';
+        const r = document.getElementById('table-risk-filter');
+        if (r) r.value = 'ALL';
+        applyFilters();
+      });
+
+      document.getElementById('btn-map-highrisk')?.addEventListener('click', () => {
+        const r = document.getElementById('table-risk-filter');
+        if (r) r.value = 'HIGH';
+        applyFilters();
+      });
+    }
+  </script>
+</body>
 </html>

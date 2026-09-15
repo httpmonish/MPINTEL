@@ -11,13 +11,13 @@ if backend_dir not in sys.path:
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import projects, intelligence
+from routers import projects, intelligence, satellite, inspections, cross_scheme
 from config import config
 
 app = FastAPI(
     title=config.PROJECT_NAME,
     version=config.VERSION,
-    description="Pratyaksh — AI-Powered MPLADS Monitoring Intelligence Layer ON TOP of eSAKSHI",
+    description="AI-Powered MPLADS Monitoring Intelligence Layer ON TOP of eSAKSHI",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -33,6 +33,9 @@ app.add_middleware(
 
 app.include_router(intelligence.router, prefix="/api/v1")
 app.include_router(projects.router, prefix="/api/v1")
+app.include_router(satellite.router, prefix="/api/v1")
+app.include_router(inspections.router, prefix="/api/v1")
+app.include_router(cross_scheme.router, prefix="/api/v1")
 
 @app.get("/")
 def root():

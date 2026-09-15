@@ -11,6 +11,8 @@ import {
 } from "@/lib/types";
 import { computeRiskScore } from "@/lib/engine/risk-score";
 import { predictProjectDelay } from "@/lib/engine/delay-predictor";
+import { generateSatelliteEvidence } from "../engine/satellite";
+
 
 const WORK_CATEGORIES: WorkCategory[] = [
   "Roads & Bridges",
@@ -242,6 +244,17 @@ export function generateSyntheticDataset(projectCount: number = 180): {
       ],
       escalationLevel: "District",
     },
+    satelliteEvidence: generateSatelliteEvidence({
+      projectId: "HERO-MPLADS-001",
+      category: "Solar & Street Lighting",
+      latitude: 19.0760,
+      longitude: 72.8777,
+      sanctionDate: "2023-08-01",
+      targetCompletionDate: "2024-06-30",
+      physicalProgressPct: 42,
+      radiusMeters: 100,
+      preferredProvider: "Bhuvan",
+    }),
     synthetic: true,
     dataSource: "synthetic",
   };
@@ -323,6 +336,17 @@ export function generateSyntheticDataset(projectCount: number = 180): {
       expectedDelayDays: 0,
       primaryRiskFactors: ["Work completed on schedule."],
     },
+    satelliteEvidence: generateSatelliteEvidence({
+      projectId: "PRJ-2023-088",
+      category: "Solar & Street Lighting",
+      latitude: 18.5204,
+      longitude: 73.8567,
+      sanctionDate: "2023-01-15",
+      targetCompletionDate: "2023-09-30",
+      physicalProgressPct: 100,
+      radiusMeters: 100,
+      preferredProvider: "Sentinel-2",
+    }),
     synthetic: true,
     dataSource: "synthetic",
   };
@@ -478,6 +502,17 @@ export function generateSyntheticDataset(projectCount: number = 180): {
         escalationLevel: "District",
       };
     }
+
+    project.satelliteEvidence = generateSatelliteEvidence({
+      projectId: project.id,
+      category: project.workCategory,
+      latitude: project.latitude,
+      longitude: project.longitude,
+      sanctionDate: project.sanctionDate,
+      targetCompletionDate: project.targetCompletionDate,
+      physicalProgressPct: project.physicalProgressPct,
+      radiusMeters: 100,
+    });
 
     projects.push(project);
   }

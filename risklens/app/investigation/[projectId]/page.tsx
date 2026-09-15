@@ -12,6 +12,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatINR } from "@/lib/utils";
+import { SatelliteEvidenceCard } from "@/components/satellite";
+import { EvidenceTriangulationCard, FieldEvidenceTimeline, HumanReviewDialog } from "@/components/field";
+import { getDeterministicInspections, calculateTriangulatedVerificationConfidence } from "@/lib/engine/field-verification";
+import { FieldInspectionRecord } from "@/lib/types";
+
 import {
   ArrowLeft,
   ShieldAlert,
@@ -45,6 +50,55 @@ export default function InvestigationDetailPage() {
       ? projects.find((p) => p.id === "HERO-MPLADS-001")
       : undefined);
   const refDuplicateProject = projects.find((p) => p.id === "PRJ-2023-088");
+
+  const [projectInspections, setProjectInspections] = useState<FieldInspectionRecord[]>(() => {
+    return getDeterministicInspections(project ? project.id : projectId);
+  });
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedReviewInsp, setSelectedReviewInsp] = useState<FieldInspectionRecord | null>(null);
+
+  const triangulatedConfidence = calculateTriangulatedVerificationConfidence(
+    projectInspections[0]?.locationStatus || "WITHIN_RADIUS",
+    projectInspections.flatMap((i) => i.photos),
+    project?.satelliteEvidence
+  );
+
+  const handleReviewSubmit = (
+    inspectionId: string,
+    decision: "VERIFIED" | "PARTIALLY_VERIFIED" | "INSUFFICIENT_EVIDENCE" | "EVIDENCE_CONFLICT_CONFIRMED" | "REQUEST_REINSPECTION",
+    remarks: string
+  ) => {
+    setProjectInspections((prev) =>
+      prev.map((insp) => {
+        if (insp.inspectionId === inspectionId) {
+          return {
+            ...insp,
+            status: decision === "VERIFIED" ? "VERIFIED" : decision === "EVIDENCE_CONFLICT_CONFIRMED" ? "EVIDENCE_CONFLICT" : "REQUIRES_REVIEW",
+            reviewDecision: {
+              reviewer: "Authorized District Investigator",
+              reviewerRole: "District Planning Officer",
+              decision,
+              remarks,
+              reviewedAt: new Date().toISOString(),
+              supportingEvidenceIds: insp.photos.map((p) => p.id),
+            },
+            auditTrail: [
+              ...insp.auditTrail,
+              {
+                action: `HUMAN_REVIEW_${decision}`,
+                performedBy: "District Planning Officer",
+                timestamp: new Date().toISOString(),
+                details: `Decision: ${decision}. Remarks: ${remarks}`,
+              },
+            ],
+          };
+        }
+        return insp;
+      })
+    );
+    setActionSuccessMsg(`Human Audit Decision Recorded: '${decision}'. Audit trail updated.`);
+    setTimeout(() => setActionSuccessMsg(null), 5000);
+  };
 
   if (!project) {
     return (
@@ -188,6 +242,35 @@ export default function InvestigationDetailPage() {
               </p>
             </div>
           </div>
+
+          {/* Phase 3 Multi-Scheme Cross-Verification Alert */}
+          {(isHero || project.crossSchemeMatch) && (
+            <div className="mt-3 p-4 rounded-xl bg-indigo-50/90 border border-indigo-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-start gap-3">
+                <Layers className="w-4 h-4 text-indigo-700 shrink-0 mt-0.5" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-indigo-950 uppercase tracking-wider font-mono text-[11px]">
+                      Phase 3 Cross-Scheme Candidate Match Detected
+                    </span>
+                    <Badge className="bg-indigo-700 text-white text-[9px] font-bold px-1.5 py-0.2">
+                      82% Similarity
+                    </Badge>
+                  </div>
+                  <p className="text-indigo-900 mt-0.5 leading-relaxed">
+                    Correlating claim found under <span className="font-semibold">MGNREGA</span> (Work ID: NREGA-MH-2023-9021) within 45m with 96% pHash photo overlap and common contractor <span className="font-mono">ENT-SOLAR-CORP-09</span>.
+                  </p>
+                </div>
+              </div>
+
+              <Link href="/cross-scheme/MATCH-MPLADS-MGNREGA-0001-9021" className="shrink-0">
+                <Button size="sm" className="bg-indigo-900 hover:bg-indigo-800 text-white text-xs h-8 px-3 font-semibold flex items-center gap-1">
+                  View Cross-Scheme Evidence
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Phase 2 Extension 2.3: Dual Progress Visualizer (Physical vs Financial Burn Mismatch) */}
@@ -396,43 +479,31 @@ export default function InvestigationDetailPage() {
           </Card>
         </div>
 
-        {/* Phase 4 Extension 4.2: Satellite Change Detection & Cross-Scheme Double Dipping */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader className="border-b border-slate-100 pb-3">
-              <CardTitle className="text-base flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Satellite className="w-4 h-4 text-cyan-600" />
-                  Independent Satellite Change-Detection (Sentinel-2 / Bhuvan)
-                </span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-cyan-50 text-cyan-800 border border-cyan-200">
-                  Supporting Signal
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-5 space-y-3">
-              <div className="grid grid-cols-2 gap-3 text-center">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-slate-500 font-semibold block">T0 Pre-Sanction (Aug 2023)</span>
-                  <div className="h-28 rounded-lg bg-slate-900 border border-slate-300 flex items-center justify-center text-slate-400 text-xs font-mono">
-                    [Base Surface Tile]
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] text-slate-500 font-semibold block">T1 Current Tile (Jun 2024)</span>
-                  <div className="h-28 rounded-lg bg-slate-800 border border-cyan-400 flex items-center justify-center text-cyan-300 text-xs font-mono">
-                    [Pixel Diff Conf: 68%]
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Optical surface reflectance indicates physical structure erection with 68% confidence. Labeled as an independent supporting signal, not definitive proof.
-              </p>
-            </CardContent>
-          </Card>
+        {/* Phase 1: Satellite Change Detection & Verification */}
+        <SatelliteEvidenceCard evidence={project.satelliteEvidence} />
 
-          {/* Phase 4 Extension 4.4: Cross-Scheme Double-Dipping Match */}
-          <Card>
+        {/* Phase 2: Multi-Signal Evidence Triangulation */}
+        <EvidenceTriangulationCard
+          confidenceBreakdown={triangulatedConfidence}
+          satelliteEvidence={project.satelliteEvidence}
+          inspections={projectInspections}
+        />
+
+        {/* Phase 2: Physical Field Evidence Timeline & Milestones */}
+        <Card className="border-slate-200/80 shadow-2xs">
+          <CardContent className="p-5">
+            <FieldEvidenceTimeline
+              inspections={projectInspections}
+              onReviewClick={(insp) => {
+                setSelectedReviewInsp(insp);
+                setReviewModalOpen(true);
+              }}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Phase 4 Extension 4.4: Cross-Scheme Double-Dipping Match */}
+        <Card>
             <CardHeader className="border-b border-slate-100 pb-3">
               <CardTitle className="text-base flex items-center justify-between">
                 <span className="flex items-center gap-2">
@@ -465,7 +536,6 @@ export default function InvestigationDetailPage() {
               )}
             </CardContent>
           </Card>
-        </div>
 
         {/* Signal 3: Stage-Wise SLA Bottleneck & Role Attribution */}
         <Card>
@@ -615,7 +685,16 @@ export default function InvestigationDetailPage() {
 
         {/* Docked Domain-Scoped Investigation Copilot */}
         <InvestigationCopilot project={project} />
+
+        {/* Phase 2: Human Review & Re-inspection Modal */}
+        <HumanReviewDialog
+          inspection={selectedReviewInsp}
+          open={reviewModalOpen}
+          onOpenChange={setReviewModalOpen}
+          onSubmitReview={handleReviewSubmit}
+        />
       </div>
     </DashboardShell>
   );
 }
+

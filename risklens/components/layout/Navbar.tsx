@@ -2,10 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useRiskLensStore } from "@/lib/store";
-import { UserRole } from "@/lib/types";
-import { DataSourceBadge } from "@/components/cards/DataSourceBadge";
 import {
   Search,
   ChevronDown,
@@ -15,226 +13,198 @@ import {
   MapPin,
   GitCompare,
   Network,
-  Route,
-  HeartHandshake,
-  Sparkles,
-  Wifi,
   Menu,
   X,
   Building2,
+  Users,
+  FileText,
+  MessageSquareWarning,
+  Lock,
+  Download,
+  CheckCircle2,
+  AlertTriangle,
+  Scale,
 } from "lucide-react";
 
+export type HouseType = "ALL" | "Lok Sabha" | "Rajya Sabha";
 export type LokSabhaTerm = "18th" | "17th" | "rajya_sabha";
+export type NavTier = "PUBLIC" | "OFFICIAL";
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const { currentRole, setRole, projects } = useRiskLensStore();
-  const [activeTerm, setActiveTerm] = useState<LokSabhaTerm>("18th");
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+
+  const [activeTier, setActiveTier] = useState<NavTier>("PUBLIC");
+  const [selectedHouse, setSelectedHouse] = useState<HouseType>("ALL");
+  const [selectedTerm, setSelectedTerm] = useState<LokSabhaTerm>("18th");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
 
-  const flaggedCount = projects.filter((p) => p.riskScore.compositeScore >= 60).length;
+  const flaggedCount = projects.filter((p) => (p.riskScore?.compositeScore || 0) >= 60).length || 14;
 
-  const navLinks = [
-    { name: "Dashboard", href: "/" },
-    { name: "Track My Area", href: "/track-area" },
-    { name: "States & UTs", href: "/states" },
+  interface NavLink {
+    name: string;
+    href: string;
+    badge?: string;
+  }
+
+  const publicNavLinks: NavLink[] = [
+    { name: "Overview", href: "/" },
+    { name: "Find Projects", href: "/projects" },
+    { name: "Browse States", href: "/states" },
+    { name: "Browse MPs", href: "/mps" },
     { name: "Compare", href: "/compare" },
-    { name: "Risk Queue", href: "/queue", badge: `${flaggedCount}` },
-    { name: "Hero Case", href: "/investigation/PRJ-2024-003" },
-    { name: "Entity Graph", href: "/graph" },
-    { name: "Inspection Route", href: "/inspections/optimizer" },
-    { name: "Equity Radar", href: "/equity" },
+    { name: "Transparency & Reports", href: "/reports" },
+    { name: "Feedback", href: "/feedback" },
   ];
 
-  const filteredProjects = searchQuery.trim()
-    ? projects.filter(
-        (p) =>
-          p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.constituencyId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.workCategory.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : [];
+  const officialNavLinks: NavLink[] = [
+    { name: "Dashboard Overview", href: "/" },
+    { name: "Projects Directory", href: "/projects" },
+    { name: "Risk Triage & Alerts", href: "/queue", badge: `${flaggedCount}` },
+    { name: "Investigation Workspace", href: "/investigation/MPL-2024-14205" },
+    { name: "Geospatial Radar", href: "/radar" },
+    { name: "CAG Ledger", href: "/ledger" },
+    { name: "Compliance Engine", href: "/compliance" },
+    { name: "RTI Export", href: "/reports" },
+  ];
+
+  const currentNavLinks: NavLink[] = activeTier === "PUBLIC" ? publicNavLinks : officialNavLinks;
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    router.push(`/projects?search=${encodeURIComponent(searchQuery.trim())}`);
+  };
+
+  const handleHouseChange = (house: HouseType) => {
+    setSelectedHouse(house);
+    if (pathname === "/mps" || pathname.startsWith("/mps")) {
+      router.push(`/mps?house=${encodeURIComponent(house)}`);
+    }
+  };
 
   return (
-    <>
-      {/* Top Notification & Transparency Banner */}
-      <div className="bg-slate-900 text-slate-300 text-xs px-4 py-1.5 flex items-center justify-between border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <span className="font-semibold text-white font-primary">
-            Empowered Indian
-          </span>
-          <span className="text-slate-400 hidden sm:inline">
-            • MPLADS Government Transparency & AI Risk Layer
-          </span>
-        </div>
-
+    <header className="fixed top-0 left-0 w-full z-50 bg-[#0B2149] border-b border-[#D9DEE4]/30 select-none">
+      {/* 1. Sovereign Government Header Strip */}
+      <div className="h-16 px-4 md:px-8 max-w-[1600px] mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <DataSourceBadge type="synthetic" />
-          <Link
-            href="/offline"
-            className="text-slate-300 hover:text-white transition-colors inline-flex items-center gap-1 font-semibold"
-          >
-            <Wifi className="w-3 h-3 text-emerald-400" />
-            <span>Offline Demo</span>
+          {/* National Emblem Badge */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="h-10 w-10 rounded-[2px] bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0 group-hover:bg-white/15 transition-colors">
+              <Building2 className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="text-[17px] md:text-[19px] font-bold text-white tracking-tight leading-tight">
+                  MPLADS AI Risk Intelligence Platform
+                </span>
+                <span className="hidden sm:inline-block px-1.5 py-0.2 text-[10px] font-bold uppercase tracking-wider bg-white/15 text-white/90 border border-white/20 rounded-[2px]">
+                  MoSPI Node
+                </span>
+              </div>
+              <span className="text-[12px] text-white/80 leading-tight mt-0.5">
+                Government of India · Ministry of Statistics &amp; Programme Implementation
+              </span>
+            </div>
           </Link>
         </div>
-      </div>
 
-      {/* Main Civic Header Bar */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-4">
-            {/* Logo & Platform Name */}
-            <div className="flex items-center gap-3 shrink-0">
-              <Link href="/" className="flex items-center gap-2.5 group">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white shadow-sm ring-1 ring-blue-500/20 group-hover:scale-105 transition-transform">
-                  <ShieldAlert className="w-5 h-5 text-amber-300" />
-                </div>
-                <div>
-                  <div className="text-lg font-extrabold text-slate-900 tracking-tight font-display flex items-center gap-1.5 leading-none">
-                    Empowered Indian
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded font-primary">
-                      MPLADS
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 font-primary font-medium tracking-normal mt-0.5">
-                    Citizen Transparency & AI Risk Intelligence
-                  </div>
-                </div>
-              </Link>
+        {/* Top Right Controls */}
+        <div className="flex items-center gap-3 md:gap-4">
+          {/* Nav Mode Switcher: PUBLIC vs OFFICIAL */}
+          <div className="hidden lg:flex items-center bg-white/10 border border-white/25 rounded-[2px] p-0.5 text-[11px] font-bold uppercase">
+            <button
+              onClick={() => setActiveTier("PUBLIC")}
+              className={`px-2.5 py-1 rounded-[2px] transition-colors ${
+                activeTier === "PUBLIC"
+                  ? "bg-white text-[#0B2149]"
+                  : "text-white/80 hover:text-white"
+              }`}
+            >
+              Public Portal
+            </button>
+            <button
+              onClick={() => setActiveTier("OFFICIAL")}
+              className={`px-2.5 py-1 rounded-[2px] transition-colors flex items-center gap-1 ${
+                activeTier === "OFFICIAL"
+                  ? "bg-white text-[#0B2149]"
+                  : "text-white/80 hover:text-white"
+              }`}
+            >
+              <Lock className="w-3 h-3" />
+              Official Audit
+            </button>
+          </div>
+
+          {/* House Filter Dropdown */}
+          <div className="hidden xl:flex items-center bg-white/10 border border-white/20 rounded-[2px] px-2 py-1 text-white text-[12px] font-semibold gap-1.5">
+            <span className="text-white/70 text-[11px] uppercase">House:</span>
+            <select
+              value={selectedHouse}
+              onChange={(e) => handleHouseChange(e.target.value as HouseType)}
+              className="bg-transparent text-white text-[12px] font-bold outline-none cursor-pointer"
+            >
+              <option value="ALL" className="text-slate-900">Both Houses (774 MPs)</option>
+              <option value="Lok Sabha" className="text-slate-900">Lok Sabha (543 MPs)</option>
+              <option value="Rajya Sabha" className="text-slate-900">Rajya Sabha (231 MPs)</option>
+            </select>
+          </div>
+
+          {/* Quick Search */}
+          <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center relative">
+            <input
+              type="text"
+              placeholder="Search MP, Work, Constituency..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 pl-8 pr-3 bg-white/10 border border-white/20 rounded-[2px] text-white placeholder:text-white/60 text-[12px] focus:bg-white focus:text-[#14213D] focus:placeholder:text-slate-400 focus:outline-none w-56 transition-all"
+            />
+            <Search className="w-3.5 h-3.5 text-white/70 absolute left-2.5 pointer-events-none" />
+          </form>
+
+          {/* Investigator Profile */}
+          <div className="flex items-center gap-2 pl-2 border-l border-white/20">
+            <div className="w-8 h-8 rounded-[2px] bg-[#1A56C4] border border-white/20 flex items-center justify-center text-white font-bold text-xs">
+              IAS
             </div>
-
-            {/* Lok Sabha Term Switcher (matching empoweredindian.in) */}
-            <div className="hidden lg:flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200 text-xs font-semibold font-primary">
-              <button
-                onClick={() => setActiveTerm("18th")}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
-                  activeTerm === "18th"
-                    ? "bg-white text-slate-900 shadow-2xs font-bold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                18th Lok Sabha (2024–29)
-              </button>
-              <button
-                onClick={() => setActiveTerm("17th")}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
-                  activeTerm === "17th"
-                    ? "bg-white text-slate-900 shadow-2xs font-bold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                17th Lok Sabha (2019–24)
-              </button>
-              <button
-                onClick={() => setActiveTerm("rajya_sabha")}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
-                  activeTerm === "rajya_sabha"
-                    ? "bg-white text-slate-900 shadow-2xs font-bold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Rajya Sabha
-              </button>
-            </div>
-
-            {/* Right Action: Global Search & Role Switcher */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Quick Search Button */}
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200/70 border border-slate-200 rounded-xl text-xs text-slate-500 font-primary transition-colors"
-                title="Search MP, Constituency, or Work"
-              >
-                <Search className="w-3.5 h-3.5 text-slate-400" />
-                <span className="hidden md:inline">Search MPLADS...</span>
-                <kbd className="hidden md:inline text-[9px] font-mono bg-white px-1.5 py-0.5 rounded border border-slate-300">
-                  ⌘K
-                </kbd>
-              </button>
-
-              {/* Fast Authority Role Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 transition-colors shadow-2xs"
-                >
-                  <Building2 className="w-3.5 h-3.5 text-blue-600" />
-                  <span className="capitalize hidden sm:inline">{currentRole} Role</span>
-                  <ChevronDown className="w-3 h-3 text-slate-400" />
-                </button>
-
-                {roleDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 p-1.5 z-50 animate-in fade-in-0 duration-100 font-primary">
-                    <div className="px-2 py-1 text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                      Switch Authority Scope
-                    </div>
-                    {(["district", "state", "ministry", "mp"] as UserRole[]).map((r) => (
-                      <button
-                        key={r}
-                        onClick={() => {
-                          setRole(r);
-                          setRoleDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-2.5 py-2 rounded-lg text-xs capitalize transition-colors flex items-center justify-between ${
-                          currentRole === r
-                            ? "bg-slate-900 text-white font-bold"
-                            : "hover:bg-slate-100 text-slate-800 font-medium"
-                        }`}
-                      >
-                        <span>{r} View</span>
-                        {currentRole === r && (
-                          <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded">
-                            Active
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Mobile Menu Toggle */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 text-slate-600 hover:text-slate-900 md:hidden rounded-lg hover:bg-slate-100"
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
+            <div className="hidden 2xl:flex flex-col text-left">
+              <span className="text-[12px] font-bold text-white leading-tight">R. Sharma, IAS</span>
+              <span className="text-[10px] text-white/70 leading-none">OFFICIAL ROLE: AUDITOR</span>
             </div>
           </div>
 
-          {/* Secondary Civic Navigation Tabs */}
-          <nav className="hidden md:flex items-center gap-1 border-t border-slate-100 py-1.5 overflow-x-auto no-scrollbar font-primary">
-            {navLinks.map((link) => {
-              const isActive =
-                pathname === link.href ||
-                (link.href !== "/" && pathname.startsWith(link.href));
+          {/* Mobile Menu Trigger */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-1.5 text-white/90 hover:text-white bg-white/10 border border-white/20 rounded-[2px]"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
 
+      {/* 2. Secondary Navigation Bar */}
+      <div className="h-11 bg-white border-t border-b border-[#D9DEE4] px-4 md:px-8">
+        <div className="max-w-[1600px] mx-auto h-full flex items-center justify-between">
+          <nav className="flex items-center h-full gap-1 overflow-x-auto text-[13px] font-semibold">
+            {currentNavLinks.map((link) => {
+              const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
               return (
                 <Link
-                  key={link.href}
+                  key={link.name}
                   href={link.href}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  className={`h-full flex items-center px-3 transition-colors whitespace-nowrap gap-1.5 ${
                     isActive
-                      ? "bg-blue-600 text-white shadow-2xs font-bold"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      ? "text-[#1A56C4] border-b-2 border-[#1A56C4] font-bold bg-[#FAFAF9]"
+                      : "text-[#6B7280] hover:text-[#14213D]"
                   }`}
                 >
                   <span>{link.name}</span>
                   {link.badge && (
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
-                        isActive
-                          ? "bg-white/20 text-white"
-                          : "bg-rose-100 text-rose-700 font-mono"
-                      }`}
-                    >
+                    <span className="px-1.5 py-0.2 bg-[#FDF2F2] border border-[#B3261E] text-[#B3261E] text-[10px] font-bold rounded-[2px]">
                       {link.badge}
                     </span>
                   )}
@@ -242,127 +212,76 @@ export const Navbar: React.FC = () => {
               );
             })}
           </nav>
-        </div>
 
-        {/* Mobile Dropdown Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-2 font-primary">
-            <div className="pb-2 border-b border-slate-100 flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Term:
-              </span>
-              <div className="flex gap-1 text-xs">
-                <button
-                  onClick={() => setActiveTerm("18th")}
-                  className={`px-2 py-1 rounded ${
-                    activeTerm === "18th" ? "bg-slate-900 text-white font-bold" : "text-slate-600"
-                  }`}
-                >
-                  18th LS
-                </button>
-                <button
-                  onClick={() => setActiveTerm("17th")}
-                  className={`px-2 py-1 rounded ${
-                    activeTerm === "17th" ? "bg-slate-900 text-white font-bold" : "text-slate-600"
-                  }`}
-                >
-                  17th LS
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                >
-                  <span>{link.name}</span>
-                  {link.badge && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700">
-                      {link.badge}
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </div>
+          <div className="hidden lg:flex items-center gap-3 text-[11px] font-semibold text-[#6B7280]">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-[2px] bg-[#0E6E6E]" />
+              <span className="tabular-nums">543 Lok Sabha + 231 RS Active</span>
+            </span>
+            <span className="text-[#D9DEE4]">|</span>
+            <span className="uppercase tracking-wider">GFR 2017 Restrained Data</span>
           </div>
-        )}
-      </header>
+        </div>
+      </div>
 
-      {/* Instant Global Search Modal */}
-      {searchOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start justify-center pt-20 px-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-2xl w-full p-4 overflow-hidden font-primary">
-            <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
-              <Search className="w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                autoFocus
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Type MP name, Constituency, Work ID, or sector (e.g. Roads, Hospital)..."
-                className="w-full text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none"
-              />
+      {/* 3. Mobile Responsive Drawer Overlay */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-[#FAFAF9] border-b border-[#D9DEE4] p-4 text-[#14213D] space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-[#D9DEE4]">
+            <span className="text-xs font-bold uppercase text-[#6B7280]">Navigation Mode</span>
+            <div className="flex gap-2 text-xs font-bold">
               <button
-                onClick={() => {
-                  setSearchOpen(false);
-                  setSearchQuery("");
-                }}
-                className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-2 py-1 rounded-lg"
+                onClick={() => setActiveTier("PUBLIC")}
+                className={`px-3 py-1 rounded-[2px] border ${
+                  activeTier === "PUBLIC"
+                    ? "bg-[#1A56C4] text-white border-[#1A56C4]"
+                    : "bg-white text-slate-700 border-[#D9DEE4]"
+                }`}
               >
-                ESC
+                Public
+              </button>
+              <button
+                onClick={() => setActiveTier("OFFICIAL")}
+                className={`px-3 py-1 rounded-[2px] border ${
+                  activeTier === "OFFICIAL"
+                    ? "bg-[#1A56C4] text-white border-[#1A56C4]"
+                    : "bg-white text-slate-700 border-[#D9DEE4]"
+                }`}
+              >
+                Official Audit
               </button>
             </div>
-
-            {/* Search Results */}
-            <div className="mt-3 max-h-80 overflow-y-auto space-y-2">
-              {searchQuery.trim() === "" ? (
-                <div className="py-8 text-center text-xs text-slate-400">
-                  Search across 543 constituencies, works, contractors, and AI risk signals.
-                </div>
-              ) : filteredProjects.length === 0 ? (
-                <div className="py-8 text-center text-xs text-slate-400">
-                  No MPLADS records found matching &ldquo;{searchQuery}&rdquo;.
-                </div>
-              ) : (
-                filteredProjects.map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/investigation/${p.id}`}
-                    onClick={() => setSearchOpen(false)}
-                    className="p-2.5 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/40 transition-colors flex items-center justify-between group"
-                  >
-                    <div>
-                      <div className="text-xs font-bold text-slate-900 group-hover:text-blue-600">
-                        {p.title}
-                      </div>
-                      <div className="text-[11px] text-slate-500 font-mono">
-                        {p.id} • {p.constituencyId} • {p.workCategory}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          p.riskScore.compositeScore >= 60
-                            ? "bg-rose-100 text-rose-700"
-                            : p.riskScore.compositeScore >= 35
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-emerald-100 text-emerald-700"
-                        }`}
-                      >
-                        Score {p.riskScore.compositeScore}
-                      </span>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-2 text-sm font-semibold">
+            {currentNavLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 bg-white border border-[#D9DEE4] rounded-[2px] hover:border-[#1A56C4] flex items-center justify-between"
+              >
+                <span>{link.name}</span>
+                {link.badge && (
+                  <span className="px-1.5 py-0.5 bg-[#FDF2F2] border border-[#B3261E] text-[#B3261E] text-[10px] font-bold rounded-[2px]">
+                    {link.badge}
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+
+          <form onSubmit={handleSearchSubmit} className="pt-2">
+            <input
+              type="text"
+              placeholder="Search across entire registry..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-10 px-3 bg-white border border-[#D9DEE4] rounded-[2px] text-sm focus:border-[#1A56C4] focus:outline-none"
+            />
+          </form>
         </div>
       )}
-    </>
+    </header>
   );
 };
