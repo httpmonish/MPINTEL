@@ -114,7 +114,7 @@
         </button>
 
         <!-- Officer Profile Strip -->
-        <div class="flex items-center gap-2.5 pl-3 border-l border-white/20">
+        <div id="officer-profile-strip" class="flex items-center gap-2.5 pl-3 border-l border-white/20">
           <div class="w-8 h-8 rounded-sm bg-primary border border-white/20 flex items-center justify-center text-white">
             <span class="material-symbols-outlined text-[18px]">person</span>
           </div>
@@ -122,8 +122,16 @@
             <span class="text-[13px] font-bold text-white leading-tight">R. Sharma, IAS</span>
             <span class="text-[10px] text-white/70 tracking-wider uppercase leading-none mt-0.5">DISTRICT / STATE INVESTIGATOR</span>
           </div>
-          <button onclick="window.location.href='/'" class="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-sm transition-colors cursor-pointer" title="Sign Out to Landing Page" type="button">
+          <button onclick="switchToLandingPage()" class="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-sm transition-colors cursor-pointer flex items-center justify-center" title="Sign Out to Landing Page" type="button">
             <span class="material-symbols-outlined text-[18px]">logout</span>
+          </button>
+        </div>
+
+        <!-- Public Guest Login Strip (Shown when logged out) -->
+        <div id="guest-login-strip" class="hidden items-center gap-2.5 pl-3 border-l border-white/20">
+          <button onclick="switchToOfficialWorkspace()" class="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-[12px] font-bold rounded-sm transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs">
+            <span class="material-symbols-outlined text-[16px]">lock_open</span>
+            <span>Official Login</span>
           </button>
         </div>
       </div>
@@ -132,8 +140,9 @@
     <!-- Secondary Navigation Bar -->
     <div class="h-11 bg-surface border-t border-b border-bordercol px-4 md:px-8">
       <div class="max-w-[1600px] mx-auto h-full flex items-center justify-between">
-        <nav class="flex items-center h-full gap-1 overflow-x-auto text-[13px] font-semibold">
-          <a class="text-primary border-b-2 border-primary h-full flex items-center px-3 transition-colors whitespace-nowrap" href="#">Dashboard Overview</a>
+        <nav id="nav-primary-links" class="flex items-center h-full gap-1 overflow-x-auto text-[13px] font-semibold">
+          <a onclick="switchToLandingPage()" class="text-muted hover:text-ink h-full flex items-center px-3 transition-colors whitespace-nowrap cursor-pointer" href="javascript:void(0)">Public Portal</a>
+          <a class="text-primary border-b-2 border-primary h-full flex items-center px-3 transition-colors whitespace-nowrap" href="#section-overview">Dashboard Overview</a>
           <a class="text-muted hover:text-ink h-full flex items-center px-3 transition-colors whitespace-nowrap" href="#section-manifest">Projects Directory</a>
           <a class="text-muted hover:text-ink h-full flex items-center px-3 transition-colors whitespace-nowrap" href="#section-manifest">Risk Triage &amp; Alerts (<span id="nav-flagged-count" class="text-status-red font-bold">14</span> Flagged)</a>
           <a class="text-muted hover:text-ink h-full flex items-center px-3 transition-colors whitespace-nowrap" href="#section-radar">Geospatial Radar</a>
@@ -142,24 +151,229 @@
         </nav>
         <div class="hidden lg:flex items-center gap-1.5 text-[11px] font-semibold text-muted uppercase tracking-wider">
           <span class="material-symbols-outlined text-[14px]">lock</span>
-          <span>RESTRICTED OFFICIAL USE ONLY · GFR 2017</span>
+          <span id="nav-status-mode">RESTRICTED OFFICIAL USE ONLY · GFR 2017</span>
         </div>
       </div>
     </div>
   </header>
 
   <!-- ================================================================= -->
-  <!-- MAIN WORKSPACE -->
+  <!-- MAIN CONTAINER -->
   <!-- ================================================================= -->
   <main class="w-full pt-28 pb-12 flex-1">
-    <div class="max-w-[1600px] mx-auto px-4 md:px-8 space-y-6">
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- VIEW A: SOVEREIGN PUBLIC LANDING PAGE & LOGIN DASHBOARD PORTAL -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div id="view-landing-page" class="hidden max-w-[1600px] mx-auto px-4 md:px-8 space-y-8">
+      
+      <!-- Landing Hero Banner -->
+      <div class="bg-surface rounded-sm border border-bordercol p-6 sm:p-10 shadow-xs relative overflow-hidden">
+        <div class="max-w-3xl space-y-4">
+          <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-sm text-[11px] font-bold uppercase tracking-wider bg-navy/5 text-navy border border-navy/20">
+            <span class="material-symbols-outlined text-[14px]">verified</span>
+            <span>Government Transparency &amp; Public Accountability Platform</span>
+          </div>
+
+          <h1 class="text-3xl sm:text-5xl font-bold text-ink tracking-tight font-display leading-[1.08]">
+            Empowered Indian: Member of Parliament Local Area Development Scheme
+          </h1>
+
+          <p class="text-muted text-sm sm:text-base leading-relaxed">
+            Public audit, tracking, and explainable AI risk intelligence across all 543 Lok Sabha constituencies. Track real-time fund allocations, completed civic assets, and AI-flagged accountability notices.
+          </p>
+
+          <!-- Interactive Term Toggle -->
+          <div class="pt-2 flex flex-wrap items-center gap-2 text-xs">
+            <span class="font-bold text-muted uppercase tracking-wider mr-2">Parliament Term:</span>
+            <button class="px-3.5 py-1.5 rounded-sm font-bold bg-navy text-white shadow-xs" type="button">18th Lok Sabha (2024–29)</button>
+            <button class="px-3.5 py-1.5 rounded-sm font-semibold bg-canvas text-ink hover:bg-bordercol/50" type="button">17th Lok Sabha (2019–24)</button>
+            <button class="px-3.5 py-1.5 rounded-sm font-semibold bg-canvas text-ink hover:bg-bordercol/50" type="button">Rajya Sabha</button>
+          </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-bordercol flex flex-wrap items-center justify-between gap-4 text-xs">
+          <div class="flex items-center gap-4 text-muted">
+            <span class="px-2 py-0.5 bg-status-green-bg text-status-green border border-status-green/30 font-bold rounded-sm">Primary Gov Source</span>
+            <span>• Sansad.in &amp; MoSPI eSAKSHI Datasets</span>
+            <span>• GFR 2017 &amp; RTI Section 4 Compliant</span>
+          </div>
+          <button onclick="switchToOfficialWorkspace()" class="text-primary hover:text-primary-hover font-bold inline-flex items-center gap-1 cursor-pointer">
+            <span>Enter Official Audit Workspace</span>
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Comprehensive Login & Portal Access Suite -->
+      <div class="bg-surface rounded-sm border border-bordercol p-6 shadow-xs space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 pb-4 border-b border-bordercol">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-muted">PORTAL ACCESS &amp; LOGIN SUITE</span>
+            <h2 class="text-xl font-bold text-ink">Choose Portal Module or Role Login</h2>
+          </div>
+          <span class="text-xs text-muted">Click any portal below to launch directly</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Card 1: Official Investigator Login -->
+          <div class="p-5 rounded-sm border border-bordercol hover:border-primary hover:bg-canvas/60 transition-all flex flex-col justify-between space-y-3 group">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-sm bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[22px]">shield_person</span>
+                </div>
+                <span class="px-1.5 py-0.5 bg-status-red-bg text-status-red border border-status-red/30 text-[10px] font-bold uppercase rounded-sm">
+                  Restricted Official
+                </span>
+              </div>
+              <h3 class="text-base font-bold text-ink group-hover:text-primary">
+                District / State Investigator Portal
+              </h3>
+              <p class="text-xs text-muted leading-relaxed">
+                Access active triage queues, 14 flagged multi-variable anomalies, and field verification dossiers.
+              </p>
+            </div>
+            <button onclick="switchToOfficialWorkspace()" class="w-full py-2 bg-navy hover:bg-navy/90 text-white text-xs font-bold rounded-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+              <span>Login as R. Sharma, IAS</span>
+              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+          </div>
+
+          <!-- Card 2: Browse MPs Directory -->
+          <div class="p-5 rounded-sm border border-bordercol hover:border-primary hover:bg-canvas/60 transition-all flex flex-col justify-between space-y-3 group">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-sm bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[22px]">groups</span>
+                </div>
+                <span class="px-1.5 py-0.5 bg-navy/5 text-navy border border-navy/20 text-[10px] font-bold uppercase rounded-sm">
+                  Public Roster
+                </span>
+              </div>
+              <h3 class="text-base font-bold text-ink group-hover:text-primary">
+                Browse MPs Directory (774 MPs)
+              </h3>
+              <p class="text-xs text-muted leading-relaxed">
+                Searchable directory of all 543 Lok Sabha and 231 Rajya Sabha MPs with fund utilization and completed works.
+              </p>
+            </div>
+            <button onclick="switchToOfficialWorkspace(); window.location.hash='#section-manifest';" class="w-full py-2 bg-surface hover:bg-canvas border border-bordercol hover:border-primary text-primary text-xs font-bold rounded-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+              <span>Browse All 774 MPs</span>
+              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+          </div>
+
+          <!-- Card 3: Find Projects in My Constituency -->
+          <div class="p-5 rounded-sm border border-bordercol hover:border-primary hover:bg-canvas/60 transition-all flex flex-col justify-between space-y-3 group">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-sm bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[22px]">map</span>
+                </div>
+                <span class="px-1.5 py-0.5 bg-status-green-bg text-status-green border border-status-green/30 text-[10px] font-bold uppercase rounded-sm">
+                  Citizen Tool
+                </span>
+              </div>
+              <h3 class="text-base font-bold text-ink group-hover:text-primary">
+                Find Projects in My Constituency
+              </h3>
+              <p class="text-xs text-muted leading-relaxed">
+                Filter local community projects by state and parliamentary constituency with physical progress tracking.
+              </p>
+            </div>
+            <button onclick="switchToOfficialWorkspace(); window.location.hash='#section-manifest';" class="w-full py-2 bg-surface hover:bg-canvas border border-bordercol hover:border-primary text-primary text-xs font-bold rounded-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+              <span>Find Local Projects</span>
+              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+          </div>
+
+          <!-- Card 4: Geospatial Radar GIS -->
+          <div class="p-5 rounded-sm border border-bordercol hover:border-primary hover:bg-canvas/60 transition-all flex flex-col justify-between space-y-3 group">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-sm bg-teal-50 text-teal-600 border border-teal-200 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[22px]">radar</span>
+                </div>
+                <span class="px-1.5 py-0.5 bg-teal-100 text-teal-800 text-[10px] font-bold uppercase rounded-sm">
+                  Sentinel-2
+                </span>
+              </div>
+              <h3 class="text-base font-bold text-ink group-hover:text-primary">
+                Geospatial Radar &amp; Earth Observation
+              </h3>
+              <p class="text-xs text-muted leading-relaxed">
+                Interactive satellite telemetry sweeping all 543 constituencies for backscatter polygon confirmation.
+              </p>
+            </div>
+            <button onclick="switchToOfficialWorkspace(); window.location.hash='#section-radar';" class="w-full py-2 bg-navy hover:bg-navy/90 text-white text-xs font-bold rounded-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+              <span>Launch Radar GIS</span>
+              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+          </div>
+
+          <!-- Card 5: CAG Reconciliation Ledger -->
+          <div class="p-5 rounded-sm border border-bordercol hover:border-primary hover:bg-canvas/60 transition-all flex flex-col justify-between space-y-3 group">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-sm bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+                </div>
+                <span class="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold uppercase rounded-sm">
+                  CAG Audit
+                </span>
+              </div>
+              <h3 class="text-base font-bold text-ink group-hover:text-primary">
+                CAG Reconciliation Ledger &amp; GFR 2017
+              </h3>
+              <p class="text-xs text-muted leading-relaxed">
+                District unspent balances, interest accrued vs remitted under Rule 230(8), and overdue UCs.
+              </p>
+            </div>
+            <button onclick="switchToOfficialWorkspace(); window.location.hash='#section-dossier';" class="w-full py-2 bg-surface hover:bg-canvas border border-bordercol hover:border-primary text-primary text-xs font-bold rounded-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+              <span>Inspect CAG Ledger</span>
+              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+          </div>
+
+          <!-- Card 6: RTI Disclosures & Downloads -->
+          <div class="p-5 rounded-sm border border-bordercol hover:border-primary hover:bg-canvas/60 transition-all flex flex-col justify-between space-y-3 group">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-sm bg-purple-50 text-purple-600 border border-purple-200 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[22px]">download</span>
+                </div>
+                <span class="px-1.5 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-bold uppercase rounded-sm">
+                  Open Data
+                </span>
+              </div>
+              <h3 class="text-base font-bold text-ink group-hover:text-primary">
+                RTI Section 4(1)(b) Reports &amp; Exports
+              </h3>
+              <p class="text-xs text-muted leading-relaxed">
+                Download machine-readable CSV datasets, CAG audit packs, and automated compliance ledgers.
+              </p>
+            </div>
+            <button onclick="triggerCsvExport()" class="w-full py-2 bg-surface hover:bg-canvas border border-bordercol hover:border-primary text-primary text-xs font-bold rounded-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+              <span>Export Open CSV Dataset</span>
+              <span class="material-symbols-outlined text-[16px]">download</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- VIEW B: OFFICIAL INVESTIGATION WORKSPACE & AUDIT LEDGER -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div id="view-official-workspace" class="max-w-[1600px] mx-auto px-4 md:px-8 space-y-6">
 
       <!-- 2. BREADCRUMB & DATA FRESHNESS STRIP -->
       <div class="w-full bg-surface border border-bordercol p-3 rounded-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div class="flex items-center gap-1.5 text-[13px] text-muted flex-wrap">
-          <span class="hover:text-primary cursor-pointer">Official Workspace</span>
+          <span onclick="switchToLandingPage()" class="hover:text-primary cursor-pointer">Public Portal</span>
           <span>›</span>
-          <span class="font-semibold text-ink">National Dashboard Overview</span>
+          <span class="font-semibold text-ink">Official Workspace</span>
           <span>›</span>
           <span class="text-muted" id="jurisdiction-label">All India Jurisdiction (Active Lok Sabha 18th Session)</span>
         </div>
@@ -1621,6 +1835,52 @@
         return `<strong>Audit Intelligence Scan for '${q}':</strong>
           <p class="mt-1">Multi-variable anomaly scan complete across 2,48,190 works in eSAKSHI & PFMS database. Rule evaluations: GFR-144 (Cost Norms), GFR-130 (Splitting Checks), NIC-12 (Photo Sensors). Fairness Safeguard: Zero penalty applied to unavailable feeds.</p>`;
       }
+    }
+
+    function switchToLandingPage() {
+      const landing = document.getElementById('view-landing-page');
+      const workspace = document.getElementById('view-official-workspace');
+      const officerStrip = document.getElementById('officer-profile-strip');
+      const guestStrip = document.getElementById('guest-login-strip');
+      const navStatus = document.getElementById('nav-status-mode');
+
+      if (landing) landing.classList.remove('hidden');
+      if (workspace) workspace.classList.add('hidden');
+      if (officerStrip) {
+        officerStrip.classList.remove('flex');
+        officerStrip.classList.add('hidden');
+      }
+      if (guestStrip) {
+        guestStrip.classList.remove('hidden');
+        guestStrip.classList.add('flex');
+      }
+      if (navStatus) {
+        navStatus.textContent = 'PUBLIC CITIZEN TRANSPARENCY MODE';
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchToOfficialWorkspace() {
+      const landing = document.getElementById('view-landing-page');
+      const workspace = document.getElementById('view-official-workspace');
+      const officerStrip = document.getElementById('officer-profile-strip');
+      const guestStrip = document.getElementById('guest-login-strip');
+      const navStatus = document.getElementById('nav-status-mode');
+
+      if (landing) landing.classList.add('hidden');
+      if (workspace) workspace.classList.remove('hidden');
+      if (officerStrip) {
+        officerStrip.classList.remove('hidden');
+        officerStrip.classList.add('flex');
+      }
+      if (guestStrip) {
+        guestStrip.classList.remove('flex');
+        guestStrip.classList.add('hidden');
+      }
+      if (navStatus) {
+        navStatus.textContent = 'RESTRICTED OFFICIAL USE ONLY · GFR 2017';
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function triggerCsvExport() {
